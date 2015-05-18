@@ -1,5 +1,6 @@
 echo "Running unit tests:"
 
+#find all *_tests but exclude mac os debugging symbol
 for i in $(find . -type f \( -name \*_tests ! -path .\/\*dSYM\/\* \));
 do
   if test -f $i
