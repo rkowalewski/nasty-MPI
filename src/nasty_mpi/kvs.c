@@ -104,7 +104,8 @@ void kvs_clear_destroy(KVstore store)
 static inline int kvs_indexOf(KVstore store, const void *key)
 {
   //Do Linear search
-  for (int i = 0; i < store->size; i++)
+  int i;
+  for (i = 0; i < store->size; i++)
   {
     if (store->pairs[i]->key == key)
     {

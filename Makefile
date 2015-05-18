@@ -1,4 +1,8 @@
-CFLAGS=-g -O2 -Wall -Wextra -Isrc -DNDEBUG $(OPTFLAGS)
+LIB_NAME=nasty_mpi
+MAJOR=0
+MINOR=1
+
+CFLAGS=-g -O2 -Wall -std=c99 -Wextra -Isrc $(OPTFLAGS) #-DNDEBUG
 LIBS=$(OPTLIBS)
 PREFIX?=/usr/local
 
@@ -8,33 +12,39 @@ OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 TEST_SRC=$(wildcard tests/*_tests.c)
 TESTS=$(patsubst %.c,%,$(TEST_SRC))
 
-LIBNAME=libnasty_mpi.a
-TARGET=build/$(LIBNAME)
-SO_TARGET=$(patsubst %.a,%.so,$(TARGET))
+LIB_VERSION=$(MAJOR).$(MINOR)
+TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
+
+UNAME := $(shell uname -s)
 
 # The Target Build
-all: $(TARGET) $(SO_TARGET)
+all: CFLAGS += -DNDEBUG
+all: $(TARGET)
 
-dev: CFLAGS=-g -Wall -Isrc -Wall -Wextra $(OPTFLAGS)
-dev: all tests
+#dev: CFLAGS += -Werror
+dev: $(TARGET)
+	cd lib; \
+	ln -fs ../$(TARGET) lib$(LIB_NAME).so.$(MAJOR); \
+	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so
 
 $(TARGET): CFLAGS += -fPIC
 $(TARGET): build $(OBJECTS)
-	ar rcs $@ $(OBJECTS)
-	ranlib $@
-
-$(SO_TARGET): $(TARGET) $(OBJECTS)
-	$(CC) -shared -o $@ $(OBJECTS)
+ifeq ($(UNAME), Darwin)
+	$(CC) -shared -Wl,-install_name,lib$(LIB_NAME).so.$(MAJOR) $(OBJECTS) -o $@ -lc
+else
+	$(CC) -shared -Wl,-soname,lib$(LIB_NAME).so.$(MAJOR) $(OBJECTS) -o $@ -lc
+endif
 
 build:
 	@mkdir -p build
 	@mkdir -p bin
+	@mkdir -p lib
 
 # The Unit Tests
 .PHONY: tests
-tests: CFLAGS += $(TARGET)
-tests: $(TESTS)
-	echo "test sources are: $(TESTS)"
+tests: LDLIBS = -l$(LIB_NAME)
+tests: LDFLAGS = -Wl,-rpath,./lib/ -L./lib/
+tests: dev $(TESTS)
 	sh ./tests/runtests.sh
 
 # The Cleaner
@@ -48,7 +58,6 @@ clean:
 install: all
 	install -d $(DESTDIR)/$(PREFIX)/lib/
 	install $(TARGET) $(DESTDIR)/$(PREFIX)/lib/
-
-# Uninstall
-uninstall:
-	rm -f $(DESTDIR)/$(PREFIX)/lib/$(LIBNAME)
+	ldconfig -n  $(DESTDIR)/$(PREFIX)/lib/
+	cd  $(DESTDIR)/$(PREFIX)/lib/; \
+	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so
