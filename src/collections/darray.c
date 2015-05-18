@@ -53,7 +53,7 @@ int DArray_expand(DArray array)
   size_t old_capacity = array->capacity;
   if (DArray_resize(array, array->capacity + array->expand_rate)) return -1;
 
-  memset(array->contents + old_capacity, 0, array->expand_rate * array->element_size);
+  memset(array->contents + old_capacity, 0, array->expand_rate * sizeof(void *));
   return 0;
 }
 

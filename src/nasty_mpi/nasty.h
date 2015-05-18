@@ -9,7 +9,7 @@ typedef enum
   PUT, GET
 } nasty_mpi_fn_type;
 
-struct nasty_mpi_put
+typedef struct nasty_mpi_put
 {
   const void *origin_addr;
   int origin_count;
@@ -19,9 +19,9 @@ struct nasty_mpi_put
   int target_count;
   MPI_Datatype target_datatype;
   //MPI_Win win;
-};
+} nasty_mpi_put;
 
-struct nasty_mpi_get
+typedef struct nasty_mpi_get
 {
   void *origin_addr;
   int origin_count;
@@ -31,17 +31,17 @@ struct nasty_mpi_get
   int target_count;
   MPI_Datatype target_datatype;
 // MPI_Win win
-};
+} nasty_mpi_get;
 
-struct nasty_mpi_fn
+typedef struct nasty_mpi_fn
 {
   nasty_mpi_fn_type type;
   union
   {
-    struct nasty_mpi_put put;
-    struct nasty_mpi_get get;
+    nasty_mpi_put put;
+    nasty_mpi_get get;
   } data;
-};
+} nasty_mpi_fn;
 
 int MPI_Init(int *argc, char ***argv);
 int MPI_Finalize(void);

@@ -25,6 +25,7 @@ char *test_put()
     mu_assert(kvs_put(store, &keys[i], values[i]) == 0, "put not successful");
   }
 
+
   mu_assert(store->capacity == 10, "capacity is not correct after 5 insertions.");
 
 
@@ -55,10 +56,17 @@ char *test_get()
   return NULL;
 }
 
-char *test_update() {
+char *test_update()
+{
   char *hello = "hello";
   kvs_put(store, &keys[2], hello);
   mu_assert(strcmp(kvs_get(store, &keys[2]), hello) == 0, "wrong value for key");
+  return NULL;
+}
+
+char* test_clear_destroy()
+{
+  kvs_clear_destroy(store);
   return NULL;
 }
 
@@ -69,6 +77,7 @@ char * all_tests()
   mu_run_test(test_put);
   mu_run_test(test_get);
   mu_run_test(test_update);
+  mu_run_test(test_clear_destroy);
 
 
   return NULL;

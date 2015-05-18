@@ -135,6 +135,7 @@ static inline int kvs_expand_internal(KVstore store)
   size_t old_capacity = store->capacity;
   if (kvs_resize(store, store->capacity + store->expand_rate)) return -1;
 
-  memset(store->pairs + old_capacity, 0, store->expand_rate * sizeof(struct KVentry));
+  memset(store->pairs + old_capacity, 0, store->expand_rate * sizeof(KVentry));
+
   return 0;
 }
