@@ -1,4 +1,3 @@
-#include <mpi.h>
 #include <nasty_mpi/nasty.h>
 #include <collections/kvs.h>
 #include <stdio.h>
