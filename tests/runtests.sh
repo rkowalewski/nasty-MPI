@@ -1,6 +1,6 @@
 echo "Running unit tests:"
 
-for i in tests/*_tests
+for i in $(find . -type f \( -name \*_tests ! -path .\/\*dSYM\/\* \));
 do
   if test -f $i
   then
