@@ -1,5 +1,5 @@
-#ifndef _KVS_H__
-#define _KVS_H__
+#ifndef __KVS_H
+#define __KVS_H
 
 #include <stdlib.h>
 

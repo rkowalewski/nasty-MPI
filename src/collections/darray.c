@@ -1,5 +1,5 @@
 #include <string.h>
-#include <nasty_mpi/darray.h>
+#include <collections/darray.h>
 #include <time.h>
 
 DArray DArray_create(size_t element_size, size_t initial_capacity, darray_item_free *free_fn)

@@ -1,7 +1,7 @@
 #include "minunit.h"
-#include <nasty_mpi/kvs.h>
-#include<assert.h>
-#include<stdlib.h>
+#include <collections/kvs.h>
+#include <assert.h>
+#include <stdlib.h>
 
 static KVstore store = NULL;
 static int keys[5] = {1, 2, 3, 4, 5};

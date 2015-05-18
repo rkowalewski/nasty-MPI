@@ -1,5 +1,5 @@
 #include <nasty_mpi/nasty.h>
-#include <nasty_mpi/kvs.h>
+#include <collections/kvs.h>
 #include <stdio.h>
 
 

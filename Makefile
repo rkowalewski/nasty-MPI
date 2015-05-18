@@ -43,7 +43,7 @@ build:
 # The Unit Tests
 .PHONY: tests
 tests: LDLIBS = -l$(LIB_NAME)
-tests: LDFLAGS = -Wl,-rpath,./lib/ -L./lib/
+#tests: LDFLAGS = -Wl,-rpath,./lib/ -L./lib/
 tests: dev $(TESTS)
 	sh ./tests/runtests.sh
 

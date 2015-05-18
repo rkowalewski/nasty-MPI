@@ -1,7 +1,7 @@
 #include "minunit.h"
-#include <nasty_mpi/darray.h>
-#include<assert.h>
-#include<stdlib.h>
+#include <collections/darray.h>
+#include <assert.h>
+#include <stdlib.h>
 
 static DArray array = NULL;
 static int *val1 = NULL;

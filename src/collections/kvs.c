@@ -1,4 +1,4 @@
-#include <nasty_mpi/kvs.h>
+#include <collections/kvs.h>
 #include <string.h>
 
 static inline int kvs_resize(KVstore store, size_t newsize);
