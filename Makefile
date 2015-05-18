@@ -21,7 +21,7 @@ UNAME := $(shell uname -s)
 all: CFLAGS += -DNDEBUG
 all: $(TARGET)
 
-#dev: CFLAGS += -Werror
+dev: CFLAGS += -Werror
 dev: $(TARGET)
 	cd lib; \
 	ln -fs ../$(TARGET) lib$(LIB_NAME).so.$(MAJOR); \
