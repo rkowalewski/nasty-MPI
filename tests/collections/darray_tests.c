@@ -1,4 +1,4 @@
-#include "minunit.h"
+#include "../minunit.h"
 #include <collections/darray.h>
 #include <assert.h>
 #include <stdlib.h>

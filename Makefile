@@ -10,7 +10,7 @@ PREFIX?=/usr/local
 SOURCES=$(wildcard src/**/*.c src/*.c)
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 
-TEST_SRC=$(wildcard tests/*_tests.c)
+TEST_SRC=$(wildcard tests/**/*_tests.c)
 TESTS=$(patsubst %.c,%,$(TEST_SRC))
 
 LIB_VERSION=$(MAJOR).$(MINOR)
