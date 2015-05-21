@@ -1,5 +1,4 @@
 #include <nasty_mpi/nasty.h>
-#include <nasty_mpi/dbg.h>
 #include <collections/kvs.h>
 #include <collections/darray.h>
 
@@ -46,53 +45,53 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
             int target_rank, MPI_Aint target_disp, int target_count,
             MPI_Datatype target_datatype, MPI_Win win)
 {
-  debug("buffering put...\n");
-
   Nasty_mpi_put *nasty_put = NULL;
-  _map_nasty_put(nasty_put)
 
   DArray arr_ops = kvs_get(store, &win);
+  if (arr_ops)
+  {
 
-  Nasty_mpi_op *op_info = DArray_new(arr_ops);
-  op_info->type = OP_PUT;
-  op_info->data = nasty_put;
+    Nasty_mpi_op *op_info = DArray_new(arr_ops);
+    op_info->type = OP_PUT;
+    op_info->data = nasty_put;
 
-  DArray_push(arr_ops, op_info);
+    DArray_push(arr_ops, op_info);
 
-  return MPI_SUCCESS;
-
-  //TODO: create free functions for both DArray and KVstore
-
-  /*
-  return PMPI_Put(origin_addr, origin_count, origin_datatype,
-                  target_rank, target_disp, target_count, target_datatype,
-                  win);
-  */
+    return MPI_SUCCESS;
+  }
+  else
+  {
+    return PMPI_Put(origin_addr, origin_count, origin_datatype,
+                    target_rank, target_disp, target_count, target_datatype,
+                    win);
+  }
 }
 
 int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
             int target_rank, MPI_Aint target_disp, int target_count,
             MPI_Datatype target_datatype, MPI_Win win)
 {
-  debug("buffering get...\n");
-
   Nasty_mpi_get *nasty_get = NULL;
-  _map_nasty_get(nasty_get);
 
   DArray arr_ops = kvs_get(store, &win);
 
-  Nasty_mpi_op *op_info = DArray_new(arr_ops);
-  op_info->type = OP_GET;
-  op_info->data = nasty_get;
+  if (arr_ops)
+  {
+    _map_nasty_get(nasty_get);
 
-  DArray_push(arr_ops, op_info);
+    Nasty_mpi_op *op_info = DArray_new(arr_ops);
+    op_info->type = OP_GET;
+    op_info->data = nasty_get;
 
-  return MPI_SUCCESS;
-  /*
-  return PMPI_Get(origin_addr, origin_count, origin_datatype,
-                  target_rank, target_disp, target_count, target_datatype,
-                  win);
-  */
+    DArray_push(arr_ops, op_info);
+    return MPI_SUCCESS;
+  }
+  else
+  {
+    return PMPI_Get(origin_addr, origin_count, origin_datatype,
+                    target_rank, target_disp, target_count, target_datatype,
+                    win);
+  }
 }
 
 int MPI_Win_lock_all(int assert, MPI_Win win)
@@ -101,6 +100,7 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
 
   if (result == MPI_SUCCESS)
   {
+    debug("locking success");
 
     DArray arr_ops = kvs_get(store, &win);
 
@@ -116,21 +116,27 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
 
 static inline int execute_nasty_op(MPI_Win win, Nasty_mpi_op *op_info)
 {
+  if (!win) return -1;
   if (op_info->type == OP_PUT)
   {
-    debug("executing put...\n");
     Nasty_mpi_put *put = op_info->data;
+    debug_nasty_call(OP_PUT, put->origin_addr, put->origin_count, put->target_rank, (unsigned int) put->target_disp, put->target_count);
+    /*
     return PMPI_Put(put->origin_addr, put->origin_count, put->origin_datatype,
                     put->target_rank, put->target_disp, put->target_count, put->target_datatype,
                     win);
+                    */
   }
   else if (op_info->type == OP_GET)
   {
-    debug("executing get...\n");
     Nasty_mpi_get *get = op_info->data;
+    debug_nasty_call(OP_GET, get->origin_addr, get->origin_count, get->target_rank, (unsigned int) get->target_disp, get->target_count);
+
+    /*
     return PMPI_Get(get->origin_addr, get->origin_count, get->origin_datatype,
                     get->target_rank, get->target_disp, get->target_count, get->target_datatype,
                     win);
+                    */
   }
 
   return -1;
@@ -139,16 +145,20 @@ static inline int execute_nasty_op(MPI_Win win, Nasty_mpi_op *op_info)
 int MPI_Win_unlock_all(MPI_Win win)
 {
   DArray arr_ops = kvs_get(store, &win);
-  DArray_shuffle(arr_ops);
 
-  int i;
-  for (i = 0; i < arr_ops->size; i++)
+  if (arr_ops)
   {
-    Nasty_mpi_op *op_info = DArray_remove(arr_ops, i);
-    execute_nasty_op(win, op_info);
-  }
+    DArray_shuffle(arr_ops);
 
-  DArray_clear(arr_ops);
+    int i;
+    for (i = 0; i < arr_ops->size; i++)
+    {
+      Nasty_mpi_op *op_info = DArray_remove(arr_ops, i);
+      execute_nasty_op(win, op_info);
+    }
+
+    DArray_clear(arr_ops);
+  }
 
   return PMPI_Win_unlock_all(win);
 }
@@ -161,7 +171,7 @@ int MPI_Finalize(void)
 
 static void free_nasty_mpi_op(void *data)
 {
-  Nasty_mpi_op *op = data;
+  Nasty_mpi_op *op = (Nasty_mpi_op *) data;
   free(op->data);
   free(op);
 }
