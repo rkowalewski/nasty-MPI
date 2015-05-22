@@ -47,7 +47,7 @@ int MPI_Init(int *argc, char ***argv)
     store = kvs_create(5, 5, free_kv_entry);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-    srand((unsigned)time(NULL)+rank*size + NASTY_ID_LEN);
+    srand((unsigned)time(NULL) + rank * size + NASTY_ID_LEN);
     random_set_seed_initialized(1);
   }
 
@@ -59,12 +59,12 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
             MPI_Datatype target_datatype, MPI_Win win)
 {
   Nasty_mpi_put *nasty_put = NULL;
-  
+
   char *win_name = malloc((NASTY_ID_LEN + 1) * sizeof(char));
   win_get_nasty_id(win, &win_name);
   DArray arr_ops = kvs_get(store, &win_name);
-  //free(win_name);
-  
+  free(win_name);
+
   if (arr_ops)
   {
 
@@ -95,8 +95,8 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
   DArray arr_ops = kvs_get(store, &win_name);
   debug("rank: %d, executing nasty get id: %s, arr_ops: %p, store size: %d", rank, win_name, arr_ops, store->size);
 
-for (int i=0; i < store->size; i++) debug("key: %s", store->pairs[i]->key);
-fflush(stderr); 
+  for (int i = 0; i < store->size; i++) debug("key: %s", store->pairs[i]->key);
+  fflush(stderr);
   //free(win_name);
 
   if (arr_ops)
@@ -112,8 +112,6 @@ fflush(stderr);
   }
   else
   {
-    debug("executing native get");
-fflush(stderr); 
     return PMPI_Get(origin_addr, origin_count, origin_datatype,
                     target_rank, target_disp, target_count, target_datatype,
                     win);
@@ -134,10 +132,10 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
     {
       arr_ops = DArray_create(sizeof(Nasty_mpi_op), 10, free_nasty_mpi_op);
       debug("rank: %d, create array for win: %s, array: %p", rank, win_name, arr_ops);
-fflush(stderr);
+      fflush(stderr);
       kvs_put(store, &win_name, arr_ops);
     }
-    //free(win_name);
+    free(win_name);
   }
 
   return result;
@@ -178,7 +176,7 @@ int MPI_Win_unlock_all(MPI_Win win)
   win_get_nasty_id(win, &win_name);
   DArray arr_ops = kvs_get(store, &win_name);
   debug("rank: %d, unlock win: %s, array: %p", rank, win_name, arr_ops);
-  //free(win_name);
+  free(win_name);
 
   if (arr_ops)
   {
@@ -209,8 +207,8 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
     generate_random_string(NASTY_ID_LEN, name);
     result = MPI_Win_set_name(*win, name);
     debug("rank: %d, creating win with nasty_id: %s", rank, name);
-fflush(stderr);
-    //free(name);
+    fflush(stderr);
+    free(name);
   }
 
   return result;
