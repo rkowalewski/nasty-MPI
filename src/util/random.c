@@ -3,15 +3,15 @@
 #include <stdlib.h>
 
 
-static unsigned int is_initalized = 0;
-static const char CHARSET[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.-#'?!";
+static unsigned int is_initialized = 0;
+static const char CHARSET[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#?!";
 static const unsigned int charset_len = (unsigned int) (sizeof(CHARSET) - 1);
 
-static inline void initalize_random(void)
+static inline void check_random_seed(void)
 {
-  if (is_initalized) return;
+  if (is_initialized) return;
   srand((unsigned) time(NULL));
-  is_initalized = 1;
+  is_initialized = 1;
 }
 
 static inline void swap(void **src, void **dst, int i, int j)
@@ -30,9 +30,14 @@ static inline void swap(void **src, void **dst, int i, int j)
   }
 }
 
-void generate_random_string(size_t len, char *str)
+extern void random_set_seed_initialized(unsigned int value)
 {
-  initalize_random();
+  is_initialized = value;
+} 
+
+extern void generate_random_string(size_t len, char *str)
+{
+  check_random_seed();
   unsigned int n;
   for (n = 0; n < len; n++)
   {
@@ -43,9 +48,9 @@ void generate_random_string(size_t len, char *str)
   str[len] = '\0';
 }
 
-void arr_shuffle(size_t len, void **src, void **dst)
+extern void arr_shuffle(size_t len, void **src, void **dst)
 {
-  initalize_random();
+  check_random_seed();
 
   if (!len || !src || !dst) return;
 

@@ -3,7 +3,8 @@
 
 #include <stdlib.h>
 
-void generate_random_string(size_t len, char* str);
-void arr_shuffle(size_t len, void **src, void **dst);
+extern void generate_random_string(size_t len, char* str);
+extern void arr_shuffle(size_t len, void **src, void **dst);
+extern void random_set_seed_initialized(unsigned int value);
 
 #endif

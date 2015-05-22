@@ -1,5 +1,6 @@
 #include <collections/kvs.h>
 #include <string.h>
+#include <stdio.h>
 
 static inline int kvs_resize(KVstore store, size_t newsize);
 static inline int kvs_expand_internal(KVstore store);
@@ -36,6 +37,8 @@ int kvs_put(KVstore store, char **key, void *value)
   }
   else
   {
+//fprintf(stderr, "put new entry: key: %s, value: %p\n", *key, value);
+//fflush(stderr);
     KVentry entry = malloc(sizeof(struct KVentry));
     entry->key = *key;
     entry->value = value;
@@ -50,6 +53,10 @@ void* kvs_get(KVstore store, char **key)
 {
   if (!store || !key) return NULL;
 
+
+//fprintf(stderr, "fetch entry with key: %s\n", *key);
+//fflush(stderr);
+
   int idx = kvs_indexOf(store, key);
 
   return idx > -1 ? store->pairs[idx]->value : NULL;
@@ -59,6 +66,8 @@ void* kvs_remove(KVstore store, char **key)
 {
   if (!store || !key) return NULL;
 
+//fprintf(stderr, "remove entry with key: %s\n", *key);
+//fflush(stderr);
   int idx = kvs_indexOf(store, key);
   if (idx > -1)
   {
@@ -74,7 +83,11 @@ void* kvs_remove(KVstore store, char **key)
 
 void kvs_clear(KVstore store)
 {
-  if (!store) return;
+  
+//fprintf(stderr, "clear all...\n");
+//fflush(stderr);
+
+if (!store) return;
   int i = 0;
   for (i = 0; i < store->capacity; i++)
   {
@@ -87,6 +100,8 @@ void kvs_clear(KVstore store)
 
 void kvs_destroy(KVstore store)
 {
+//fprintf(stderr, "destroy all...\n");
+//fflush(stderr);
   if (store)
   {
     if (store->pairs) free(store->pairs);
