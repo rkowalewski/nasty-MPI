@@ -3,7 +3,7 @@ LIB_NAME=nasty_mpi
 MAJOR=0
 MINOR=1
 
-CFLAGS=-g -O2 -Wall -std=c99 -Wextra -Isrc $(OPTFLAGS) #-DNDEBUG
+CFLAGS=-g -O2 -Wall -std=c99  -Isrc $(OPTFLAGS) #-DNDEBUG
 LIBS=$(OPTLIBS)
 PREFIX?=/usr/local
 
@@ -22,7 +22,7 @@ UNAME := $(shell uname -s)
 all: CFLAGS += -DNDEBUG
 all: $(TARGET)
 
-dev: CFLAGS += -Werror
+dev: CFLAGS += -Werror -Wextra
 dev: $(TARGET)
 	cd lib; \
 	ln -fs ../$(TARGET) lib$(LIB_NAME).so.$(MAJOR); \
