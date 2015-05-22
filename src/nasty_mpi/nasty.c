@@ -29,6 +29,8 @@ static KVstore store = NULL;
   ((Nasty_mpi_put *)(x))->target_count = target_count; \
   ((Nasty_mpi_put *)(x))->target_datatype = target_datatype;
 
+static int rank = -1;
+
 /* Forward declarations */
 static void free_nasty_mpi_op(void *data);
 static void free_kv_entry(void *data);
@@ -41,6 +43,7 @@ int MPI_Init(int *argc, char ***argv)
   if (result == MPI_SUCCESS)
   {
     store = kvs_create(5, 5, free_kv_entry);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   }
 
   return result;
@@ -83,6 +86,7 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
 
   if (arr_ops)
   {
+    debug("rank: %d, get win with nasty_id: %s, arr_ops: %p", rank, win_name, arr_ops);
     _map_nasty_get(nasty_get);
 
     Nasty_mpi_op *op_info = DArray_new(arr_ops);
@@ -116,6 +120,7 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
       arr_ops = DArray_create(sizeof(Nasty_mpi_op), 10, free_nasty_mpi_op);
       kvs_put(store, &win_name, arr_ops);
     }
+    debug("rank: %d, locking win with nasty_id: %s, arr_ops: %p", rank, win_name, arr_ops);
   }
 
   return result;
@@ -183,6 +188,7 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
     char *name = malloc((NASTY_ID_LEN + 1) * sizeof(char));
     generate_random_string(NASTY_ID_LEN, name);
     result = MPI_Win_set_name(*win, name);
+    debug("rank: %d, creating win with nasty_id: %s", rank, name);
   }
 
   return result;

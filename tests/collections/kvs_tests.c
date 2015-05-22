@@ -106,7 +106,7 @@ char * all_tests()
   mu_run_test(test_put);
   mu_run_test(test_get);
   mu_run_test(test_update);
-  //mu_run_test(test_clear_destroy);
+  mu_run_test(test_clear_destroy);
 
 
   return NULL;
