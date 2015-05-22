@@ -1,6 +1,7 @@
 #include <string.h>
-#include <collections/darray.h>
 #include <time.h>
+#include <collections/darray.h>
+#include <util/random.h>
 
 DArray DArray_create(size_t element_size, size_t initial_capacity, darray_item_free *free_fn)
 {
@@ -110,28 +111,9 @@ void *DArray_pop(DArray array)
   return el;
 }
 
-static void swap(DArray arr, int i, int j) {
-
-  void *tmp;
-
-  tmp = arr->contents[i];
-  arr->contents[i] = arr->contents[j];
-  arr->contents[j] = tmp;
-}
-
 void DArray_shuffle(DArray array)
 {
-  if (!array || !array->size) return;
-
-  int i, j;
-
-  srand((unsigned int)time(NULL));
-
-  for (j = array->size-1; j > 1; j--)
-  {
-    i = (rand() % j) + 1;
-    swap(array, i - 1, j - 1);
-  }
+  return arr_shuffle(array->size, array->contents, array->contents);
 }
 
 /*

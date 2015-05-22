@@ -55,6 +55,9 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
 int MPI_Win_lock_all(int assert, MPI_Win win);
 int MPI_Win_unlock_all(MPI_Win win);
 
+int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
+                      MPI_Comm comm, void *baseptr, MPI_Win *win);
+
 #define debug_nasty_call(T, ...) \
   if ((T) == OP_PUT) \
     debug("buffering put:\norigin_addr: %p\norigin_count: %d\ntarget_rank: %d\ntarget_disp: %d\ntarget_count: %d\n", __VA_ARGS__); \

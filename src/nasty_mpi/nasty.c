@@ -1,6 +1,8 @@
 #include <nasty_mpi/nasty.h>
 #include <collections/kvs.h>
 #include <collections/darray.h>
+#include <util/random.h>
+#include <assert.h>
 
 
 static KVstore store = NULL;
@@ -28,6 +30,7 @@ static KVstore store = NULL;
 /* Forward declarations */
 static void free_nasty_mpi_op(void *data);
 static void free_kv_entry(void *data);
+static inline char* get_win_name(MPI_Win win);
 
 int MPI_Init(int *argc, char ***argv)
 {
@@ -46,8 +49,8 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
             MPI_Datatype target_datatype, MPI_Win win)
 {
   Nasty_mpi_put *nasty_put = NULL;
-
-  DArray arr_ops = kvs_get(store, &win);
+  char* win_name = get_win_name(win);
+  DArray arr_ops = kvs_get(store, &win_name);
   if (arr_ops)
   {
 
@@ -73,7 +76,8 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
 {
   Nasty_mpi_get *nasty_get = NULL;
 
-  DArray arr_ops = kvs_get(store, &win);
+  char* win_name = get_win_name(win);
+  DArray arr_ops = kvs_get(store, &win_name);
 
   if (arr_ops)
   {
@@ -102,12 +106,13 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
   {
     debug("locking success");
 
-    DArray arr_ops = kvs_get(store, &win);
+    char* win_name = get_win_name(win);
+    DArray arr_ops = kvs_get(store, &win_name);
 
     if (!arr_ops)
     {
       arr_ops = DArray_create(sizeof(Nasty_mpi_op), 10, free_nasty_mpi_op);
-      kvs_put(store, &win, arr_ops);
+      kvs_put(store, &win_name, arr_ops);
     }
   }
 
@@ -142,9 +147,11 @@ static inline int execute_nasty_op(MPI_Win win, Nasty_mpi_op *op_info)
   return -1;
 }
 
+
 int MPI_Win_unlock_all(MPI_Win win)
 {
-  DArray arr_ops = kvs_get(store, &win);
+  char* win_name = get_win_name(win);
+  DArray arr_ops = kvs_get(store, &win_name);
 
   if (arr_ops)
   {
@@ -161,6 +168,22 @@ int MPI_Win_unlock_all(MPI_Win win)
   }
 
   return PMPI_Win_unlock_all(win);
+}
+
+int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
+                     MPI_Comm comm, void *baseptr, MPI_Win *win)
+{
+
+  int result = PMPI_Win_allocate(size, disp_unit, info, comm, baseptr, win);
+
+  if (result == MPI_SUCCESS)
+  {
+    char *name = malloc(10 * sizeof(char));
+    generate_random_string(10, name);
+    result = MPI_Win_set_name(*win, name);
+  }
+
+  return result;
 }
 
 int MPI_Finalize(void)
@@ -184,3 +207,11 @@ static void free_kv_entry(void *data)
   free(entry);
 }
 
+static inline char* get_win_name(MPI_Win win)
+{
+  char* win_name = NULL;
+  int len;
+  MPI_Win_get_name(win, win_name, &len);
+  assert(len > 0);
+  return win_name;
+}

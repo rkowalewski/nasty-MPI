@@ -3,7 +3,7 @@
 
 static inline int kvs_resize(KVstore store, size_t newsize);
 static inline int kvs_expand_internal(KVstore store);
-static inline int kvs_indexOf(KVstore store, const void *key);
+static inline int kvs_indexOf(KVstore store, char **key);
 
 KVstore kvs_create(size_t initial_capacity, size_t expand_rate, kvs_entry_free entry_free)
 {
@@ -23,7 +23,7 @@ KVstore kvs_create(size_t initial_capacity, size_t expand_rate, kvs_entry_free e
 }
 
 
-int kvs_put(KVstore store, const void *key, void *value)
+int kvs_put(KVstore store, char **key, void *value)
 {
   if (!store || !key) return -1;
 
@@ -37,7 +37,7 @@ int kvs_put(KVstore store, const void *key, void *value)
   else
   {
     KVentry entry = malloc(sizeof(struct KVentry));
-    entry->key = key;
+    entry->key = *key;
     entry->value = value;
     store->pairs[store->size] = entry;
     store->size++;
@@ -46,7 +46,7 @@ int kvs_put(KVstore store, const void *key, void *value)
   }
 }
 
-void* kvs_get(KVstore store, const void *key)
+void* kvs_get(KVstore store, char **key)
 {
   if (!store || !key) return NULL;
 
@@ -55,7 +55,7 @@ void* kvs_get(KVstore store, const void *key)
   return idx > -1 ? store->pairs[idx]->value : NULL;
 }
 
-void* kvs_remove(KVstore store, const void *key)
+void* kvs_remove(KVstore store, char **key)
 {
   if (!store || !key) return NULL;
 
@@ -101,13 +101,14 @@ void kvs_clear_destroy(KVstore store)
   kvs_destroy(store);
 }
 
-static inline int kvs_indexOf(KVstore store, const void *key)
+static inline int kvs_indexOf(KVstore store, char **key)
 {
+  if (!key) return -1;
   //Do Linear search
   int i;
   for (i = 0; i < store->size; i++)
   {
-    if (store->pairs[i]->key == key)
+    if (strcmp(store->pairs[i]->key, *key) == 0)
     {
       return i;
     }
