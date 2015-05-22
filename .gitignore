@@ -3,5 +3,5 @@ lib
 bin
 *.o
 *.dSYM/
-tests/*_tests
+tests/**/*_tests
 tests/*.log
