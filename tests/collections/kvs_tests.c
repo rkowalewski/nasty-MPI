@@ -46,12 +46,10 @@ char *test_put()
 {
   for (int i = 0; i < 5; i++)
   {
-    printf("adding key: %s, value: %s\n", keys[i], values[i]);
-    mu_assert(store != NULL, "store is null");
-    //mu_assert(kvs_put(store, keys[i], values[i]) == 0, "put not successful");
+    mu_assert(kvs_put(store, keys[i], values[i]) == 0, "put not successful");
   }
 
-  /*
+  
 
   mu_assert(store->capacity == 10, "capacity is not correct after 5 insertions.");
 
@@ -67,7 +65,7 @@ char *test_put()
     {
       mu_assert(!store->pairs[i], "spot must be empty");
     }
-  } */
+  }
 
   return NULL;
 }
@@ -108,9 +106,9 @@ char * all_tests()
   mu_suite_start();
   mu_run_test(test_create);
   mu_run_test(test_put);
-  //mu_run_test(test_get);
-  //mu_run_test(test_update);
-  //mu_run_test(test_clear_destroy);
+  mu_run_test(test_get);
+  mu_run_test(test_update);
+  mu_run_test(test_clear_destroy);
 
 
   return NULL;

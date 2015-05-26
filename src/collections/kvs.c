@@ -1,12 +1,11 @@
 #include <collections/kvs.h>
 #include <string.h>
-#include <stdio.h>
 
 static inline int kvs_resize(KVstore store, size_t newsize);
 static inline int kvs_expand_internal(KVstore store);
 static inline int kvs_indexOf(KVstore store, char *key);
 
-KVstore kvs_create(size_t initial_capacity, size_t expand_rate, kvs_entry_free entry_free)
+KVstore kvs_create(size_t initial_capacity, size_t expand_rate, kvs_value_free_fn value_free_fn)
 {
   KVstore kvs;
 
@@ -18,7 +17,7 @@ KVstore kvs_create(size_t initial_capacity, size_t expand_rate, kvs_entry_free e
   kvs->size = 0;
   kvs->expand_rate = expand_rate ? expand_rate : DEFAULT_EXPAND_RATE;
 
-  kvs->entry_free = entry_free ? entry_free : free;
+  kvs->value_free_fn = value_free_fn;
 
   return kvs;
 }
@@ -26,9 +25,9 @@ KVstore kvs_create(size_t initial_capacity, size_t expand_rate, kvs_entry_free e
 
 int kvs_put(KVstore store, char *key, void *value)
 {
-  //if (!store || !key || !value) return -1;
+  if (!store || !key) return -1;
 
- /* int idx = kvs_indexOf(store, key);
+  int idx = kvs_indexOf(store, key);
 
   if (idx > -1)
   {
@@ -37,8 +36,6 @@ int kvs_put(KVstore store, char *key, void *value)
   }
   else
   {
-    printf("adding new key\n");
-
     KVentry entry = malloc(sizeof(struct KVentry));
     size_t key_len = strlen(key) + 1;
     char* key_val = malloc(key_len * sizeof(char));
@@ -49,9 +46,7 @@ int kvs_put(KVstore store, char *key, void *value)
     store->size++; 
 
     return (kvs_end(store) >= kvs_capacity(store)) ? kvs_expand_internal(store) : 0;
-  } */
-  if (1 == 0) return (kvs_end(store) >= kvs_capacity(store)) ? kvs_expand_internal(store) : 0;
-  return 0;
+  }
 }
 
 void* kvs_get(KVstore store, char *key)
@@ -74,6 +69,7 @@ void* kvs_remove(KVstore store, char *key)
     KVentry entry = store->pairs[idx];
     store->pairs[idx] = NULL;
     void *value = entry->value;
+    free(entry->key);
     free(entry);
     return value;
   }
@@ -90,7 +86,9 @@ void kvs_clear(KVstore store)
   {
     if (store->pairs[i])
     {
-      store->entry_free(store->pairs[i]);
+      free(store->pairs[i]->key);
+      if (store->value_free_fn) store->value_free_fn(store->pairs[i]->value);
+      free(store->pairs[i]);
     }
   }
 }
@@ -115,7 +113,6 @@ static inline int kvs_indexOf(KVstore store, char *key)
 {
   if (!key) return -1;
   //Do Linear search
-  printf("lookup key: %s\n", key);
   int i;
   for (i = 0; i < store->size; i++)
   {
