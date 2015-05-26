@@ -49,8 +49,6 @@ char *test_put()
     mu_assert(kvs_put(store, keys[i], values[i]) == 0, "put not successful");
   }
 
-  
-
   mu_assert(store->capacity == 10, "capacity is not correct after 5 insertions.");
 
 

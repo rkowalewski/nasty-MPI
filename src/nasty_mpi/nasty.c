@@ -34,8 +34,8 @@ static int rank = -1;
 
 /* Forward declarations */
 static void free_nasty_mpi_op(void *data);
-static void free_kv_entry(void *data);
-static inline void win_get_nasty_id(MPI_Win win, char** win_name);
+static void free_DArray(void *data);
+static inline void win_get_nasty_id(MPI_Win win, char *dst);
 
 int MPI_Init(int *argc, char ***argv)
 {
@@ -44,9 +44,11 @@ int MPI_Init(int *argc, char ***argv)
   if (result == MPI_SUCCESS)
   {
     int size;
-    store = kvs_create(5, 5, free_kv_entry);
+    store = kvs_create(5, 5, free_DArray);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+    //initialize PRNG
     unsigned int seed = (unsigned int) time(NULL) + rank * size;
     random_init(seed, seed + 1);
   }
@@ -60,10 +62,9 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
 {
   Nasty_mpi_put *nasty_put = NULL;
 
-  char *win_name = malloc((NASTY_ID_LEN + 1) * sizeof(char));
-  win_get_nasty_id(win, &win_name);
+  char win_name[NASTY_ID_LEN + 1];
+  win_get_nasty_id(win, win_name);
   DArray arr_ops = kvs_get(store, win_name);
-  free(win_name);
 
   if (arr_ops)
   {
@@ -90,14 +91,9 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
 {
   Nasty_mpi_get *nasty_get = NULL;
 
-  char *win_name = malloc((NASTY_ID_LEN + 1) * sizeof(char));
-  win_get_nasty_id(win, &win_name);
+  char win_name[NASTY_ID_LEN + 1];
+  win_get_nasty_id(win, win_name);
   DArray arr_ops = kvs_get(store, win_name);
-  debug("rank: %d, executing nasty get id: %s, arr_ops: %p, store size: %d", rank, win_name, arr_ops, store->size);
-
-  for (int i = 0; i < store->size; i++) debug("key: %s", store->pairs[i]->key);
-  fflush(stderr);
-  //free(win_name);
 
   if (arr_ops)
   {
@@ -124,18 +120,15 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
 
   if (result == MPI_SUCCESS)
   {
-    char *win_name = malloc((NASTY_ID_LEN + 1) * sizeof(char));
-    win_get_nasty_id(win, &win_name);
+    char win_name[NASTY_ID_LEN + 1];
+    win_get_nasty_id(win, win_name);
     DArray arr_ops = kvs_get(store, win_name);
 
     if (!arr_ops)
     {
       arr_ops = DArray_create(sizeof(Nasty_mpi_op), 10, free_nasty_mpi_op);
-      debug("rank: %d, create array for win: %s, array: %p", rank, win_name, arr_ops);
-      fflush(stderr);
       kvs_put(store, win_name, arr_ops);
     }
-    free(win_name);
   }
 
   return result;
@@ -172,11 +165,9 @@ static inline int execute_nasty_op(MPI_Win win, Nasty_mpi_op *op_info)
 
 int MPI_Win_unlock_all(MPI_Win win)
 {
-  char *win_name = malloc((NASTY_ID_LEN + 1) * sizeof(char));
-  win_get_nasty_id(win, &win_name);
+  char win_name[NASTY_ID_LEN + 1];
+  win_get_nasty_id(win, win_name);
   DArray arr_ops = kvs_get(store, win_name);
-  debug("rank: %d, unlock win: %s, array: %p", rank, win_name, arr_ops);
-  free(win_name);
 
   if (arr_ops)
   {
@@ -203,12 +194,9 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
 
   if (result == MPI_SUCCESS)
   {
-    char *name = malloc((NASTY_ID_LEN + 1) * sizeof(char));
-    random_string_seq(NASTY_ID_LEN, name);
-    result = MPI_Win_set_name(*win, name);
-    debug("rank: %d, creating win with nasty_id: %s", rank, name);
-    fflush(stderr);
-    free(name);
+    char win_name[NASTY_ID_LEN + 1];
+    random_string_seq(NASTY_ID_LEN, win_name);
+    result = MPI_Win_set_name(*win, win_name);
   }
 
   return result;
@@ -222,23 +210,26 @@ int MPI_Finalize(void)
 
 static void free_nasty_mpi_op(void *data)
 {
-  Nasty_mpi_op *op = (Nasty_mpi_op *) data;
-  free(op->data);
-  free(op);
+  if (data)
+  {
+    Nasty_mpi_op *op = (Nasty_mpi_op *) data;
+    free(op->data);
+    free(op);
+  }
 }
 
-static void free_kv_entry(void *data)
+static void free_DArray(void *data)
 {
-  //Do not free the key (win)
-  KVentry entry = data;
-  DArray_clear_destroy(entry->value);
-  free(entry);
+  if (data)
+  {
+    DArray arr = data;
+    DArray_clear_destroy(arr);
+  }
 }
 
-static inline void win_get_nasty_id(MPI_Win win, char** win_name)
+static inline void win_get_nasty_id(MPI_Win win, char *dst)
 {
-  if (!(win_name && *win_name)) return;
   int len;
-  MPI_Win_get_name(win, *win_name, &len);
+  MPI_Win_get_name(win, dst, &len);
   assert(len == NASTY_ID_LEN);
 }
