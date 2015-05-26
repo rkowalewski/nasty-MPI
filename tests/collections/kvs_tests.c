@@ -26,19 +26,6 @@ char *test_create()
     random_string_seq(KEY_LEN, keys[i]);
   }
 
-  for (i = 0; i < 5; i++)
-  {
-    char *fst = keys[i];
-    for (j = 0; j < 5; j++)
-    {
-      char *snd = keys[j];
-      if (fst != snd)
-      {
-        mu_assert(strncmp(fst, snd, KEY_LEN) != 0, "strings are not random");
-      }
-    }
-  }
-
   return NULL;
 }
 
