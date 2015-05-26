@@ -19,7 +19,7 @@ char *test_create()
   mu_assert(store->size == 0, "size is not at right spot.");
   mu_assert(store->expand_rate == 5, "Wrong expand_rate in store.");
 
-  int i, j;
+  int i;
   for (i = 0; i < 5; i++)
   {
     keys[i] = malloc((KEY_LEN + 1) * sizeof(char));
@@ -60,7 +60,7 @@ char *test_get()
   for (int i = 0; i < 5; i++)
   {
     char *retrieved = kvs_get(store, keys[i]);
-    mu_assert(strncmp(retrieved, values[i], KEY_LEN) == 0, "Wrong value in kvs");
+    mu_assert(strcmp(retrieved, values[i]) == 0, "Wrong value in kvs");
   }
 
   return NULL;
@@ -69,8 +69,9 @@ char *test_get()
 char *test_update()
 {
   char *hello = "hello";
-  kvs_put(store, keys[2], hello);
-  mu_assert(strncmp(kvs_get(store, keys[2]), hello, KEY_LEN) == 0, "wrong value for key");
+  char *old_val = (char*) kvs_put(store, keys[2], hello);
+  mu_assert(strcmp(old_val, values[2]) == 0, "wrong old value");
+  mu_assert(strcmp(kvs_get(store, keys[2]), hello) == 0, "wrong value for key");
   return NULL;
 }
 

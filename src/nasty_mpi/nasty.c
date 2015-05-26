@@ -34,7 +34,6 @@ static int rank = -1;
 
 /* Forward declarations */
 static void free_nasty_mpi_op(void *data);
-static void free_DArray(void *data);
 static inline void win_get_nasty_id(MPI_Win win, char *dst);
 
 int MPI_Init(int *argc, char ***argv)
@@ -44,7 +43,7 @@ int MPI_Init(int *argc, char ***argv)
   if (result == MPI_SUCCESS)
   {
     int size;
-    store = kvs_create(5, 5, free_DArray);
+    store = kvs_create(5, 5);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -215,15 +214,6 @@ static void free_nasty_mpi_op(void *data)
     Nasty_mpi_op *op = (Nasty_mpi_op *) data;
     free(op->data);
     free(op);
-  }
-}
-
-static void free_DArray(void *data)
-{
-  if (data)
-  {
-    DArray arr = data;
-    DArray_clear_destroy(arr);
   }
 }
 

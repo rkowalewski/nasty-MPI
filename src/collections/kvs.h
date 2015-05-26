@@ -9,8 +9,6 @@ typedef struct KVentry
   void *value;
 } *KVentry;
 
-typedef void (*kvs_value_free_fn) (void *data);
-
 #define DEFAULT_EXPAND_RATE 10
 
 typedef struct KVstore
@@ -19,16 +17,15 @@ typedef struct KVstore
   int size;
   int capacity;
   size_t expand_rate;
-  kvs_value_free_fn value_free_fn;
 } *KVstore;
 
-KVstore kvs_create(size_t initial_capacity, size_t expand_rate, kvs_value_free_fn value_free_fn);
+KVstore kvs_create(size_t initial_capacity, size_t expand_rate);
 
 void kvs_clear(KVstore store);
 void kvs_destroy(KVstore store);
 void kvs_clear_destroy(KVstore store);
 
-int kvs_put(KVstore store, char *key, void *value);
+void* kvs_put(KVstore store, char *key, void *value);
 
 void* kvs_remove(KVstore store, char *key);
 

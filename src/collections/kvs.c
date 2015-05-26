@@ -5,7 +5,7 @@ static inline int kvs_resize(KVstore store, size_t newsize);
 static inline int kvs_expand_internal(KVstore store);
 static inline int kvs_indexOf(KVstore store, char *key);
 
-KVstore kvs_create(size_t initial_capacity, size_t expand_rate, kvs_value_free_fn value_free_fn)
+KVstore kvs_create(size_t initial_capacity, size_t expand_rate)
 {
   KVstore kvs;
 
@@ -17,22 +17,21 @@ KVstore kvs_create(size_t initial_capacity, size_t expand_rate, kvs_value_free_f
   kvs->size = 0;
   kvs->expand_rate = expand_rate ? expand_rate : DEFAULT_EXPAND_RATE;
 
-  kvs->value_free_fn = value_free_fn;
-
   return kvs;
 }
 
 
-int kvs_put(KVstore store, char *key, void *value)
+void* kvs_put(KVstore store, char *key, void *value)
 {
-  if (!store || !key) return -1;
+  if (!store || !key) return NULL;
 
   int idx = kvs_indexOf(store, key);
 
   if (idx > -1)
   {
+    void *old_value = store->pairs[idx]->value;
     store->pairs[idx]->value = value;
-    return 0;
+    return old_value;
   }
   else
   {
@@ -45,7 +44,8 @@ int kvs_put(KVstore store, char *key, void *value)
     store->pairs[store->size] = entry;
     store->size++; 
 
-    return (kvs_end(store) >= kvs_capacity(store)) ? kvs_expand_internal(store) : 0;
+    if (kvs_end(store) >= kvs_capacity(store)) kvs_expand_internal(store);
+    return NULL;
   }
 }
 
@@ -87,7 +87,6 @@ void kvs_clear(KVstore store)
     if (store->pairs[i])
     {
       free(store->pairs[i]->key);
-      if (store->value_free_fn) store->value_free_fn(store->pairs[i]->value);
       free(store->pairs[i]);
     }
   }
