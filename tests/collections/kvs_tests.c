@@ -23,7 +23,7 @@ char *test_create()
   for (i = 0; i < 5; i++)
   {
     keys[i] = malloc((KEY_LEN + 1) * sizeof(char));
-    generate_random_string(KEY_LEN, keys[i]);
+    random_string_seq(KEY_LEN, keys[i]);
   }
 
   for (i = 0; i < 5; i++)

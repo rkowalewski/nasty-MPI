@@ -111,9 +111,33 @@ void *DArray_pop(DArray array)
   return el;
 }
 
+static inline void swap(void **src, void **dst, size_t i, size_t j)
+{
+  if (src == dst)
+  {
+    void *tmp;
+    tmp = dst[i];
+    dst[i] = dst[j];
+    dst[j] = tmp;
+  }
+  else
+  {
+    dst[i] = src[j];
+    dst[j] = src[i];
+  }
+}
+
 void DArray_shuffle(DArray array)
 {
-  return arr_shuffle(array->size, array->contents, array->contents);
+  if (!array || !array->size) return;
+
+  size_t i, j;
+
+  for (j = array->size - 1; j > 1; j--)
+  {
+    i = (random_seq() % j) + 1;
+    swap(array->contents, array->contents, i - 1, j - 1);
+  }
 }
 
 /*

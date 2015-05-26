@@ -19,10 +19,10 @@ TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 UNAME := $(shell uname -s)
 
 # The Target Build
-all: CFLAGS += -DNDEBUG Werror
+all: CFLAGS += -DNDEBUG
 all: $(TARGET)
 
-dev: CFLAGS += -Wextra
+dev: CFLAGS += -Wextra -Werror
 dev: $(TARGET)
 	cd lib; \
 	ln -fs ../$(TARGET) lib$(LIB_NAME).so.$(MAJOR); \

@@ -1,66 +1,54 @@
 #include <time.h>
 #include <util/random.h>
 #include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 
-
-static unsigned int is_initialized = 0;
 static const char CHARSET[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+static unsigned int m_index = 0;
+static unsigned int m_intermediateOffset = 0;
+static short int m_isInitialized = 0;
 
-static inline void check_random_seed(void)
+static unsigned int permuteQPR(unsigned int x)
 {
-  if (is_initialized) return;
-  srand((unsigned) time(NULL));
-  is_initialized = 1;
+  static const unsigned int prime = 4294967291u;
+  if (x >= prime)
+    return x;  // The 5 integers out of range are mapped to themselves.
+  unsigned int residue = ((unsigned long long) x * x) % prime;
+  return (x <= prime / 2) ? residue : prime - residue;
 }
 
-static inline void swap(void **src, void **dst, int i, int j)
+
+
+void random_init(unsigned int seedBase, unsigned int seedOffset)
 {
-  if (src == dst)
+  assert(seedBase > 0 && seedOffset > 0);
+  m_index = permuteQPR(permuteQPR(seedBase) + 0x682f0161);
+  m_intermediateOffset = permuteQPR(permuteQPR(seedOffset) + 0x46790905);
+  m_isInitialized = 1;
+}
+
+unsigned int random_seq()
+{
+  if (!m_isInitialized)
   {
-    void *tmp;
-    tmp = dst[i];
-    dst[i] = dst[j];
-    dst[j] = tmp;
+    unsigned int seed = (unsigned int) time(NULL);
+    random_init(seed, seed + 1);
   }
-  else
-  {
-    dst[i] = src[j];
-    dst[j] = src[i];
-  }
+
+  return permuteQPR((permuteQPR(m_index++) + m_intermediateOffset) ^ 0x5bf03635);
 }
 
-extern void random_set_seed_initialized(unsigned int value)
+void random_string_seq(size_t len, char *dst)
 {
-  is_initialized = value;
-}
-
-extern void generate_random_string(size_t len, char *str)
-{
-  size_t charset_len = sizeof(CHARSET) - 1;
-  check_random_seed();
-  unsigned int n;
+  assert(dst != NULL);
+  size_t charset_len = strlen(CHARSET);
+  size_t n, key;
   for (n = 0; n < len; n++)
   {
-    int key = rand() % charset_len;          // per-iteration instantiation
-    str[n] = CHARSET[key];
+    key = random_seq() % charset_len;          // per-iteration instantiation
+    dst[n] = CHARSET[key];
   }
 
-  str[len] = '\0';
+  dst[len] = '\0';
 }
-
-extern void arr_shuffle(size_t len, void **src, void **dst)
-{
-  check_random_seed();
-
-  if (!len || !src || !dst) return;
-
-  int i, j;
-
-  for (j = len - 1; j > 1; j--)
-  {
-    i = (rand() % j) + 1;
-    swap(src, dst, i - 1, j - 1);
-  }
-}
-
-

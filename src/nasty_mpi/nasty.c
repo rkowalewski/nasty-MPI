@@ -47,8 +47,8 @@ int MPI_Init(int *argc, char ***argv)
     store = kvs_create(5, 5, free_kv_entry);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-    srand((unsigned)time(NULL) + rank * size + NASTY_ID_LEN);
-    random_set_seed_initialized(1);
+    unsigned int seed = (unsigned int) time(NULL) + rank * size;
+    random_init(seed, seed + 1);
   }
 
   return result;
@@ -204,7 +204,7 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
   if (result == MPI_SUCCESS)
   {
     char *name = malloc((NASTY_ID_LEN + 1) * sizeof(char));
-    generate_random_string(NASTY_ID_LEN, name);
+    random_string_seq(NASTY_ID_LEN, name);
     result = MPI_Win_set_name(*win, name);
     debug("rank: %d, creating win with nasty_id: %s", rank, name);
     fflush(stderr);
