@@ -28,11 +28,11 @@ void kvs_clear(KVstore store);
 void kvs_destroy(KVstore store);
 void kvs_clear_destroy(KVstore store);
 
-int kvs_put(KVstore store, char **key, void *value);
+int kvs_put(KVstore store, char *key, void *value);
 
-void* kvs_remove(KVstore store, char **key);
+void* kvs_remove(KVstore store, char *key);
 
-void *kvs_get(KVstore store, char **key);
+void *kvs_get(KVstore store, char *key);
 
 #define kvs_last(A) ((A)->contents[(A)->size - 1])
 #define kvs_first(A) ((A)->contents[0])

@@ -4,7 +4,7 @@
 
 static inline int kvs_resize(KVstore store, size_t newsize);
 static inline int kvs_expand_internal(KVstore store);
-static inline int kvs_indexOf(KVstore store, char **key);
+static inline int kvs_indexOf(KVstore store, char *key);
 
 KVstore kvs_create(size_t initial_capacity, size_t expand_rate, kvs_entry_free entry_free)
 {
@@ -24,11 +24,11 @@ KVstore kvs_create(size_t initial_capacity, size_t expand_rate, kvs_entry_free e
 }
 
 
-int kvs_put(KVstore store, char **key, void *value)
+int kvs_put(KVstore store, char *key, void *value)
 {
-  if (!store || !key) return -1;
+  //if (!store || !key || !value) return -1;
 
-  int idx = kvs_indexOf(store, key);
+ /* int idx = kvs_indexOf(store, key);
 
   if (idx > -1)
   {
@@ -37,37 +37,37 @@ int kvs_put(KVstore store, char **key, void *value)
   }
   else
   {
-//fprintf(stderr, "put new entry: key: %s, value: %p\n", *key, value);
-//fflush(stderr);
+    printf("adding new key\n");
+
     KVentry entry = malloc(sizeof(struct KVentry));
-    entry->key = *key;
+    size_t key_len = strlen(key) + 1;
+    char* key_val = malloc(key_len * sizeof(char));
+    memcpy(key_val, key, key_len);
+    entry->key = key_val;
     entry->value = value;
     store->pairs[store->size] = entry;
-    store->size++;
+    store->size++; 
 
     return (kvs_end(store) >= kvs_capacity(store)) ? kvs_expand_internal(store) : 0;
-  }
+  } */
+  if (1 == 0) return (kvs_end(store) >= kvs_capacity(store)) ? kvs_expand_internal(store) : 0;
+  return 0;
 }
 
-void* kvs_get(KVstore store, char **key)
+void* kvs_get(KVstore store, char *key)
 {
   if (!store || !key) return NULL;
 
-
-//fprintf(stderr, "fetch entry with key: %s\n", *key);
-//fflush(stderr);
 
   int idx = kvs_indexOf(store, key);
 
   return idx > -1 ? store->pairs[idx]->value : NULL;
 }
 
-void* kvs_remove(KVstore store, char **key)
+void* kvs_remove(KVstore store, char *key)
 {
   if (!store || !key) return NULL;
 
-//fprintf(stderr, "remove entry with key: %s\n", *key);
-//fflush(stderr);
   int idx = kvs_indexOf(store, key);
   if (idx > -1)
   {
@@ -83,11 +83,8 @@ void* kvs_remove(KVstore store, char **key)
 
 void kvs_clear(KVstore store)
 {
-  
-//fprintf(stderr, "clear all...\n");
-//fflush(stderr);
 
-if (!store) return;
+  if (!store) return;
   int i = 0;
   for (i = 0; i < store->capacity; i++)
   {
@@ -100,8 +97,6 @@ if (!store) return;
 
 void kvs_destroy(KVstore store)
 {
-//fprintf(stderr, "destroy all...\n");
-//fflush(stderr);
   if (store)
   {
     if (store->pairs) free(store->pairs);
@@ -116,14 +111,15 @@ void kvs_clear_destroy(KVstore store)
   kvs_destroy(store);
 }
 
-static inline int kvs_indexOf(KVstore store, char **key)
+static inline int kvs_indexOf(KVstore store, char *key)
 {
   if (!key) return -1;
   //Do Linear search
+  printf("lookup key: %s\n", key);
   int i;
   for (i = 0; i < store->size; i++)
   {
-    if (strcmp(store->pairs[i]->key, *key) == 0)
+    if (strcmp(store->pairs[i]->key, key) == 0)
     {
       return i;
     }

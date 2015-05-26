@@ -62,7 +62,7 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
 
   char *win_name = malloc((NASTY_ID_LEN + 1) * sizeof(char));
   win_get_nasty_id(win, &win_name);
-  DArray arr_ops = kvs_get(store, &win_name);
+  DArray arr_ops = kvs_get(store, win_name);
   free(win_name);
 
   if (arr_ops)
@@ -92,7 +92,7 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
 
   char *win_name = malloc((NASTY_ID_LEN + 1) * sizeof(char));
   win_get_nasty_id(win, &win_name);
-  DArray arr_ops = kvs_get(store, &win_name);
+  DArray arr_ops = kvs_get(store, win_name);
   debug("rank: %d, executing nasty get id: %s, arr_ops: %p, store size: %d", rank, win_name, arr_ops, store->size);
 
   for (int i = 0; i < store->size; i++) debug("key: %s", store->pairs[i]->key);
@@ -126,14 +126,14 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
   {
     char *win_name = malloc((NASTY_ID_LEN + 1) * sizeof(char));
     win_get_nasty_id(win, &win_name);
-    DArray arr_ops = kvs_get(store, &win_name);
+    DArray arr_ops = kvs_get(store, win_name);
 
     if (!arr_ops)
     {
       arr_ops = DArray_create(sizeof(Nasty_mpi_op), 10, free_nasty_mpi_op);
       debug("rank: %d, create array for win: %s, array: %p", rank, win_name, arr_ops);
       fflush(stderr);
-      kvs_put(store, &win_name, arr_ops);
+      kvs_put(store, win_name, arr_ops);
     }
     free(win_name);
   }
@@ -174,7 +174,7 @@ int MPI_Win_unlock_all(MPI_Win win)
 {
   char *win_name = malloc((NASTY_ID_LEN + 1) * sizeof(char));
   win_get_nasty_id(win, &win_name);
-  DArray arr_ops = kvs_get(store, &win_name);
+  DArray arr_ops = kvs_get(store, win_name);
   debug("rank: %d, unlock win: %s, array: %p", rank, win_name, arr_ops);
   free(win_name);
 

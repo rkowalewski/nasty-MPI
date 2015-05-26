@@ -4,8 +4,7 @@
 
 
 static unsigned int is_initialized = 0;
-static const char CHARSET[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#?!";
-static const unsigned int charset_len = (unsigned int) (sizeof(CHARSET) - 1);
+static const char CHARSET[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 static inline void check_random_seed(void)
 {
@@ -33,10 +32,11 @@ static inline void swap(void **src, void **dst, int i, int j)
 extern void random_set_seed_initialized(unsigned int value)
 {
   is_initialized = value;
-} 
+}
 
 extern void generate_random_string(size_t len, char *str)
 {
+  size_t charset_len = sizeof(CHARSET) - 1;
   check_random_seed();
   unsigned int n;
   for (n = 0; n < len; n++)
