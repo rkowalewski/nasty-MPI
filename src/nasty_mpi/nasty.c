@@ -33,7 +33,6 @@ static int rank = -1;
 
 
 /* Forward declarations */
-static void free_nasty_mpi_op(void *data);
 static inline void win_get_nasty_id(MPI_Win win, char *dst);
 
 int MPI_Init(int *argc, char ***argv)
@@ -125,7 +124,7 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
 
     if (!arr_ops)
     {
-      arr_ops = DArray_create(sizeof(Nasty_mpi_op), 10, free_nasty_mpi_op);
+      arr_ops = DArray_create(sizeof(Nasty_mpi_op), 10);
       kvs_put(store, win_name, arr_ops);
     }
   }
@@ -177,9 +176,9 @@ int MPI_Win_unlock_all(MPI_Win win)
     {
       Nasty_mpi_op *op_info = DArray_remove(arr_ops, i);
       execute_nasty_op(win, op_info);
+      free(op_info->data);
+      free(op_info);
     }
-
-    DArray_clear(arr_ops);
   }
 
   return PMPI_Win_unlock_all(win);
@@ -203,18 +202,12 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
 
 int MPI_Finalize(void)
 {
+  KVS_VALUES_FOREACH(arr_ops, DArray, store)
+  {
+    DArray_destroy(arr_ops);
+  }
   kvs_clear_destroy(store);
   return PMPI_Finalize();
-}
-
-static void free_nasty_mpi_op(void *data)
-{
-  if (data)
-  {
-    Nasty_mpi_op *op = (Nasty_mpi_op *) data;
-    free(op->data);
-    free(op);
-  }
 }
 
 static inline void win_get_nasty_id(MPI_Win win, char *dst)

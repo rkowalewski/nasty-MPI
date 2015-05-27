@@ -3,20 +3,17 @@
 
 #include <stdlib.h>
 
-typedef void (darray_item_free) (void *data);
-
 typedef struct DArray
 {
   int size;
   int capacity;
   size_t element_size;
   size_t expand_rate;
-  darray_item_free *elem_free_fn;
   void **contents;
 } *DArray;
 
 
-DArray DArray_create(size_t element_size, size_t initial_capacity, darray_item_free *free_fn);
+DArray DArray_create(size_t element_size, size_t initial_capacity);
 
 void DArray_destroy(DArray array);
 
@@ -38,6 +35,14 @@ void DArray_clear_destroy(DArray array);
 #define DArray_end(A) ((A)->size)
 #define DArray_count(A) DArray_end(A)
 #define DArray_capacity(A) ((A)->capacity)
+
+
+#define DARRAY_FOREACH(VAR, TYPE, ARRAY) \
+  TYPE _temp; \
+  TYPE VAR; \
+  size_t _ii; \
+  for (_ii = 0, VAR = (ARRAY)->contents[_ii]; _ii < DArray_end(ARRAY); _ii++, VAR = _temp = (ARRAY)->contents[_ii])
+
 
 #define DEFAULT_EXPAND_RATE 10
 

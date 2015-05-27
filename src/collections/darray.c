@@ -3,7 +3,7 @@
 #include <collections/darray.h>
 #include <util/random.h>
 
-DArray DArray_create(size_t element_size, size_t initial_capacity, darray_item_free *free_fn)
+DArray DArray_create(size_t element_size, size_t initial_capacity)
 {
   DArray array;
 
@@ -16,8 +16,6 @@ DArray DArray_create(size_t element_size, size_t initial_capacity, darray_item_f
   array->element_size = element_size;
   array->expand_rate = DEFAULT_EXPAND_RATE;
 
-  array->elem_free_fn = free_fn ? free_fn : free;
-
   return array;
 }
 
@@ -28,9 +26,9 @@ void DArray_clear(DArray array)
   {
     for (i = 0; i < array->capacity; i++)
     {
-      if (array->contents[i])
+      if (array->contents[i] != NULL)
       {
-        array->elem_free_fn(array->contents[i]);
+        free(array->contents[i]);
       }
     }
   }
