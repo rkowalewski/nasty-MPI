@@ -9,7 +9,7 @@ static int *val2 = NULL;
 
 char *test_create()
 {
-  array = DArray_create(sizeof(int), 5, NULL);
+  array = DArray_create(sizeof(int), 5);
   mu_assert(array != NULL, "DArray_create failed.");
   mu_assert(array->contents != NULL, "contents are wrong in darray");
   mu_assert(array->size == 0, "size isn't at the right spot");

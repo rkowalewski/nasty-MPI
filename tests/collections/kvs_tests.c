@@ -12,7 +12,7 @@ static char *values[5] = {"apple", "orange", "melon", "pineapple", "lemon"};
 
 char *test_create()
 {
-  store = kvs_create(5, 5, NULL);
+  store = kvs_create(5, 5);
   mu_assert(store != NULL, "KVstore creation failed.");
   mu_assert(store->pairs != NULL, "contents are wrong in store.");
   mu_assert(store->capacity == 5, "Wrong capacity.");

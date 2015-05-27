@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
 
 #define COUNT 2
 enum {disp_guard = 0, disp_payload = 1};
@@ -11,6 +12,7 @@ void execute_rma(int myrank, MPI_Win win)
   int guard, payload;
 
   MPI_Win_lock_all(0, win);
+printf("Entering rank: %d\n", myrank); fflush(stderr);
 
   if ( myrank == 0 )
   {
