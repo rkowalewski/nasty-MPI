@@ -59,8 +59,8 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
             MPI_Datatype target_datatype, MPI_Win win)
 {
   Nasty_mpi_put *nasty_put = NULL;
-  
-char win_name[NASTY_ID_LEN + 1];
+
+  char win_name[NASTY_ID_LEN + 1];
   win_get_nasty_id(win, win_name);
   DArray arr_ops = kvs_get(store, win_name);
 
@@ -159,7 +159,7 @@ static inline int execute_nasty_op(MPI_Win win, Nasty_mpi_op *op_info)
 
 int MPI_Win_unlock_all(MPI_Win win)
 {
-char win_name[NASTY_ID_LEN + 1];
+  char win_name[NASTY_ID_LEN + 1];
   win_get_nasty_id(win, win_name);
   DArray arr_ops = kvs_get(store, win_name);
 
@@ -201,7 +201,8 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
 
 int MPI_Finalize(void)
 {
-  for (int i = 0; i < store->size; i++) {
+  for (int i = 0; i < store->size; i++)
+  {
     DArray arr_ops = store->pairs[i]->value;
     DArray_destroy(arr_ops);
   }
