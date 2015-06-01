@@ -62,7 +62,7 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
   if ((T) == OP_PUT) \
     debug("executing buffered put\norigin_addr: %p\norigin_count: %d\ntarget_rank: %d\ntarget_disp: %d\ntarget_count: %d\n", __VA_ARGS__); \
   else if ((T) == OP_GET) \
-    debug("buffering buffered get\norigin_addr: %p\norigin_count: %d\ntarget_rank: %d\ntarget_disp: %d\ntarget_count: %d\n", __VA_ARGS__);
+    debug("executing buffered get\norigin_addr: %p\norigin_count: %d\ntarget_rank: %d\ntarget_disp: %d\ntarget_count: %d\n", __VA_ARGS__);
 
 
 #endif
