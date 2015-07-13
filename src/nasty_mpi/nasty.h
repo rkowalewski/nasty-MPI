@@ -3,7 +3,12 @@
 
 #include <stdlib.h>
 #include <mpi.h>
+#include <assert.h>
 #include <nasty_mpi/dbg.h>
+#include <collections/kvs.h>
+#include <collections/darray.h>
+
+extern KVstore store;
 
 typedef enum
 {
@@ -41,22 +46,10 @@ typedef struct Nasty_mpi_op
   void *data;
 } Nasty_mpi_op;
 
-int MPI_Init(int *argc, char ***argv);
-int MPI_Finalize(void);
+#define NASTY_ID_LEN 10
 
-int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
-            int target_rank, MPI_Aint target_disp, int target_count,
-            MPI_Datatype target_datatype, MPI_Win win);
-
-int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
-            int target_rank, MPI_Aint target_disp, int target_count,
-            MPI_Datatype target_datatype, MPI_Win win);
-
-int MPI_Win_lock_all(int assert, MPI_Win win);
-int MPI_Win_unlock_all(MPI_Win win);
-
-int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
-                      MPI_Comm comm, void *baseptr, MPI_Win *win);
+void fetch_nasty_win_id(MPI_Win win, char* dst);
+int init_nasty_win_id(MPI_Win win);
 
 #define debug_nasty_call(T, ...) \
   if ((T) == OP_PUT) \
