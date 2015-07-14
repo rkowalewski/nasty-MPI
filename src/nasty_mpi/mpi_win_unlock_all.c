@@ -27,7 +27,7 @@ static inline int execute_nasty_op(MPI_Win win, Nasty_mpi_op *op_info)
 int MPI_Win_unlock_all(MPI_Win win)
 {
   char win_name[NASTY_ID_LEN + 1];
-  win_get_nasty_id(win, win_name);
+  fetch_nasty_win_id(win, win_name);
   DArray arr_ops = kvs_get(store, win_name);
 
   if (arr_ops)

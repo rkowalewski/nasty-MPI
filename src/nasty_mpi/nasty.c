@@ -35,7 +35,7 @@ int init_nasty_win_id(MPI_Win win)
 {
   char win_name[NASTY_ID_LEN + 1];
   random_string_seq(NASTY_ID_LEN, win_name);
-  return MPI_Win_set_name(*win, win_name);
+  return MPI_Win_set_name(win, win_name);
 }
 
 

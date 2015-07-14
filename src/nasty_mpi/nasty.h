@@ -10,6 +10,10 @@
 
 extern KVstore store;
 
+#define NASTY_ID_LEN 10
+void fetch_nasty_win_id(MPI_Win win, char* dst);
+int init_nasty_win_id(MPI_Win win);
+
 typedef enum
 {
   OP_PUT,
@@ -46,10 +50,7 @@ typedef struct Nasty_mpi_op
   void *data;
 } Nasty_mpi_op;
 
-#define NASTY_ID_LEN 10
 
-void fetch_nasty_win_id(MPI_Win win, char* dst);
-int init_nasty_win_id(MPI_Win win);
 
 #define debug_nasty_call(T, ...) \
   if ((T) == OP_PUT) \
