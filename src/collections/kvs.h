@@ -37,9 +37,4 @@ void *kvs_get(KVstore store, char *key);
 #define kvs_count(A) DArray_end(A)
 #define kvs_capacity(A) ((A)->capacity)
 
-#define KVS_VALUES_FOREACH(VAR, TYPE, KVS) \
-  TYPE _temp; \
-  TYPE VAR; \
-  int _ii; \
-  for (_ii = 0, VAR = (TYPE) ((KVS)->pairs[_ii]->value); _ii < kvs_end(KVS); _ii++, VAR = _temp = (TYPE) ((KVS)->pairs[_ii]->value))
 #endif /* #define __KVS_H__ */

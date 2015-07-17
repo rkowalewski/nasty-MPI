@@ -1,4 +1,4 @@
-#include <nasty_mpi/nasty.h>
+#include <nasty_mpi.h>
 
 #define _map_nasty_put(x) \
   (x) = malloc(sizeof(Nasty_mpi_put)); \
@@ -19,6 +19,8 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
   char win_name[NASTY_ID_LEN + 1];
   fetch_nasty_win_id(win, win_name);
   DArray arr_ops = kvs_get(store, win_name);
+
+  debug("executing nasty put");
 
   if (arr_ops)
   {

@@ -1,4 +1,4 @@
-#include <nasty_mpi/nasty.h>
+#include <nasty_mpi.h>
 int MPI_Win_lock_all(int assert, MPI_Win win)
 {
   int result = PMPI_Win_lock_all(assert, win);

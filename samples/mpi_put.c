@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 #define COUNT 2
-#define MEM_RANK 40
+#define MEM_RANK 1
 enum {disp_guard = 0, disp_payload = 1};
 int main(int argc, char** argv)
 {
@@ -37,32 +37,26 @@ int main(int argc, char** argv)
 
     MPI_Put( &payload, 1, MPI_INT, MEM_RANK, disp_payload, 1, MPI_INT, win);
     //Flush 1
-    MPI_Win_flush(MEM_RANK, win);
+    //MPI_Win_flush(MEM_RANK, win);
     
     MPI_Put( &flag, 1, MPI_INT, MEM_RANK, disp_guard, 1, MPI_INT, win);
     //Flush 2
-    MPI_Win_flush(MEM_RANK, win);
+    //MPI_Win_flush(MEM_RANK, win);
 
-  } else if (myrank < 32) {
-    printf("Hello world from processor %s on rank %d\n", processor_name, myrank);
-    int guard = 0, value;
-    while (!guard)
-    {
-      MPI_Get(&guard, 1, MPI_INT, MEM_RANK, disp_guard, 1, MPI_INT, win);
-      //Flush 3
-      MPI_Win_flush(MEM_RANK, win);
-    }
-    MPI_Get(&value, 1, MPI_INT, MEM_RANK, disp_payload, 1, MPI_INT, win);
-    //Flush 4
-    MPI_Win_flush(MEM_RANK, win);
-    assert(value == 42);
-  } else if (myrank == MEM_RANK)
-  {
-    printf("Hello world from processor %s on rank %d\n", processor_name, myrank);
+  } else if (myrank == MEM_RANK) {
   }
 
   MPI_Win_unlock_all(win);
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if (myrank == 1) {
+    assert(baseptr[disp_guard] == 1);
+    assert(baseptr[disp_payload] == 42);
+  }
+
   MPI_Win_free(&win);
   MPI_Finalize();
   return EXIT_SUCCESS;
 }
+

@@ -3,7 +3,7 @@ LIB_NAME=nasty_mpi
 MAJOR=0
 MINOR=1
 
-CFLAGS=-g -O2 -Wall -std=c99  -Isrc $(OPTFLAGS) #-DNDEBUG
+CFLAGS=-g -O2 -Wall -std=c99  -Isrc $(OPTFLAGS)
 LIBS=$(OPTLIBS)
 PREFIX?=/usr/local
 

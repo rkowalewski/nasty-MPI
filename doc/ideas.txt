@@ -1,0 +1,20 @@
+Potential ideas / concept:
+##########################
+
+Nasty_win
+ - origin rank (store in window as attribute)
+ - set random name on window to identify the window
+
+PMPI Submit order
+ - possible values: program order, random (default)
+ - default: random
+ - more fine-grained order? gag, gap, pag, pap (where p = mpi_put, g = mpi_get)
+ - works only with the same target rank
+ - works only when Submit Time = at_latest
+
+PMPI Submit time
+ - defer (default) 
+ - fire_immediately
+ - random
+
+Idea: break MPI Basic Datatypes?

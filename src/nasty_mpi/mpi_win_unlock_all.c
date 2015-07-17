@@ -1,4 +1,4 @@
-#include <nasty_mpi/nasty.h>
+#include <nasty_mpi.h>
 
 static inline int execute_nasty_op(MPI_Win win, Nasty_mpi_op *op_info)
 {
@@ -6,7 +6,18 @@ static inline int execute_nasty_op(MPI_Win win, Nasty_mpi_op *op_info)
   if (op_info->type == OP_PUT)
   {
     Nasty_mpi_put *put = op_info->data;
-    debug_nasty_call(OP_PUT, put->origin_addr, put->origin_count, put->target_rank, (unsigned int) put->target_disp, put->target_count);
+    debug("--executing actual put---\n"
+        "origin_addr: %p\n"
+        "origin_count: %d\n"
+        "origin_datatype: %d\n"
+        "target_rank: %d\n"
+        "target_disp: %td\n"
+        "target_count: %d\n"
+        "target_datatype: %d\n",
+        put->origin_addr, put->origin_count, put->origin_datatype,
+        put->target_rank, put->target_disp, put->target_count, put->target_datatype);
+
+
     return PMPI_Put(put->origin_addr, put->origin_count, put->origin_datatype,
                     put->target_rank, put->target_disp, put->target_count, put->target_datatype,
                     win);
@@ -14,7 +25,6 @@ static inline int execute_nasty_op(MPI_Win win, Nasty_mpi_op *op_info)
   else if (op_info->type == OP_GET)
   {
     Nasty_mpi_get *get = op_info->data;
-    debug_nasty_call(OP_GET, get->origin_addr, get->origin_count, get->target_rank, (unsigned int) get->target_disp, get->target_count);
     return PMPI_Get(get->origin_addr, get->origin_count, get->origin_datatype,
                     get->target_rank, get->target_disp, get->target_count, get->target_datatype,
                     win);
@@ -47,3 +57,4 @@ int MPI_Win_unlock_all(MPI_Win win)
 
   return PMPI_Win_unlock_all(win);
 }
+

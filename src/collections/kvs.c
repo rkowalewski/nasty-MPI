@@ -42,7 +42,7 @@ void* kvs_put(KVstore store, char *key, void *value)
     entry->key = key_val;
     entry->value = value;
     store->pairs[store->size] = entry;
-    store->size++; 
+    store->size++;
 
     if (kvs_end(store) >= kvs_capacity(store)) kvs_expand_internal(store);
     return NULL;

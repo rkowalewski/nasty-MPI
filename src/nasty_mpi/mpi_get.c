@@ -1,4 +1,4 @@
-#include <nasty_mpi/nasty.h>
+#include <nasty_mpi.h>
 
 #define _map_nasty_get(x) \
   (x) = malloc(sizeof(Nasty_mpi_get)); \
