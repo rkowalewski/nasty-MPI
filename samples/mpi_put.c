@@ -30,8 +30,8 @@ int main(int argc, char** argv)
 
   int value;
 
+  printf("Hello world from processor %s on rank %d\n", processor_name, myrank);
   if (myrank == 0) {
-    printf("Hello world from processor %s on rank %d\n", processor_name, myrank);
     int payload = 42;
     int flag = 1;
 

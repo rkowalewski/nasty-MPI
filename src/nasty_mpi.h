@@ -1,53 +1,33 @@
-#ifndef __NASTY_H
-#define __NASTY_H
+#ifndef __NASTY_MPI_H_
+#define __NASTY_MPI_H_
 
 #include <stdlib.h>
 #include <mpi.h>
-#include <assert.h>
-#include <logging.h>
-#include <collections/kvs.h>
 #include <collections/darray.h>
+#include <collections/kvs.h>
+#include <macros/logging.h>
+#include <nasty_mpi/win_storage.h>
+#include <nasty_mpi/init.h>
+#include <nasty_mpi/runtime.h>
 
-extern KVstore store;
+int MPI_Init(int *argc, char ***argv);
+int MPI_Finalize(void);
 
-#define NASTY_ID_LEN 10
-void fetch_nasty_win_id(MPI_Win win, char* dst);
-int init_nasty_win_id(MPI_Win win);
+int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+            int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
+            MPI_Win win);
 
-typedef enum
-{
-  OP_PUT,
-  OP_GET,
-} Nasty_mpi_op_type;
+int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+           int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
+           MPI_Win win);
 
-typedef struct Nasty_mpi_put
-{
-  const void *origin_addr;
-  int origin_count;
-  MPI_Datatype origin_datatype;
-  int target_rank;
-  MPI_Aint target_disp;
-  int target_count;
-  MPI_Datatype target_datatype;
-  //MPI_Win win;
-} Nasty_mpi_put;
+int MPI_Win_lock_all(int assert, MPI_Win win);
+int MPI_Win_unlock_all(MPI_Win win);
 
-typedef struct Nasty_mpi_get
-{
-  void *origin_addr;
-  int origin_count;
-  MPI_Datatype origin_datatype;
-  int target_rank;
-  MPI_Aint target_disp;
-  int target_count;
-  MPI_Datatype target_datatype;
-// MPI_Win win
-} Nasty_mpi_get;
+int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
+    MPI_Comm comm, void *baseptr, MPI_Win *win);
 
-typedef struct Nasty_mpi_op
-{
-  Nasty_mpi_op_type type;
-  void *data;
-} Nasty_mpi_op;
-
+int MPI_Win_create(void *base, MPI_Aint size, int disp_unit,
+    MPI_Info info, MPI_Comm comm, MPI_Win *win);
 #endif
+

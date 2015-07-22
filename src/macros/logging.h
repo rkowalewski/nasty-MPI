@@ -1,5 +1,5 @@
-#ifndef __DBG_H_
-#define __DBG_H_
+#ifndef __LOGGING_H_
+#define __LOGGING_H_
 
 #include <stdio.h>
 #include <errno.h>
@@ -8,7 +8,7 @@
 #ifdef NDEBUG
 #define debug(M, ...)
 #else
-#define debug(M, ...) fprintf(stderr, "DEBUG %s:%d: " M "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#define debug(M, ...) fprintf(stderr, "Nasty-MPI DEBUG %s:%d: " M "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 #endif
 
 /*

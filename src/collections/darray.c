@@ -21,9 +21,9 @@ DArray DArray_create(size_t element_size, size_t initial_capacity)
 
 void DArray_clear(DArray array)
 {
-  int i = 0;
-  if (array->element_size > 0)
+  if (array && array->element_size > 0)
   {
+    int i = 0;
     for (i = 0; i < array->capacity; i++)
     {
       if (array->contents[i] != NULL)

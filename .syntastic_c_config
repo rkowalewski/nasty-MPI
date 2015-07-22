@@ -1,0 +1,4 @@
+-Isrc
+-I/opt/mpich-3.1/include
+-Wall
+-Wextra
