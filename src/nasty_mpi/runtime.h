@@ -7,7 +7,7 @@
 #include <nasty_mpi/init.h>
 
 int execute_cached_calls(MPI_Win win);
-int handle_rma_call(Nasty_mpi_op_type type, ...);
+int handle_rma_call(MPI_Win win, Nasty_mpi_op op);
 
 #endif
 

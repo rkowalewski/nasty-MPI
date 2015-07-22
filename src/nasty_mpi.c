@@ -27,59 +27,49 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
             int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
             MPI_Win win)
 {
-  debug("before put");
 
-  DArray arr_ops = get_rma_ops(win);
+  debug("--caching put---\n"
+        "origin_addr: %p\n"
+        "origin_count: %d\n"
+        "origin_datatype: %d\n"
+        "target_rank: %d\n"
+        "target_disp: %td\n"
+        "target_count: %d\n"
+        "target_datatype: %d\n",
+        origin_addr, origin_count, origin_datatype,
+        target_rank, target_disp, target_count, target_datatype
+       );
 
-  if (arr_ops)
-  {
-    Nasty_mpi_op *op_info = DArray_new(arr_ops);
-    assert(op_info);
-    op_info->type = rma_put;
-    _map_put_get_attrs(op_info->data.put);
+  Nasty_mpi_op op_info;
+  op_info.type = rma_put;
+  _map_put_get_attrs(op_info.data.put);
 
-    DArray_push(arr_ops, op_info);
-
-    debug("after put");
-
-    return MPI_SUCCESS;
-  }
-  else
-  {
-    debug("after put");
+  if (handle_rma_call(win, op_info) != MPI_SUCCESS) {
     return PMPI_Put(origin_addr, origin_count, origin_datatype,
                     target_rank, target_disp, target_count, target_datatype,
                     win);
+
   }
+
+  return MPI_SUCCESS;
 }
 
 int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
             int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
             MPI_Win win)
 {
-  debug("before get");
-  DArray arr_ops = get_rma_ops(win);
+  Nasty_mpi_op op_info;
+  op_info.type = rma_get;
+  _map_put_get_attrs(op_info.data.get);
 
-  if (arr_ops)
-  {
-    Nasty_mpi_op *op_info = DArray_new(arr_ops);
-    assert(op_info);
-    op_info->type = rma_get;
-    _map_put_get_attrs(op_info->data.get);
-
-    DArray_push(arr_ops, op_info);
-    debug("after get");
-
-    return MPI_SUCCESS;
-  }
-  else
-  {
-    debug("after get");
+  if (handle_rma_call(win, op_info) != MPI_SUCCESS) {
     return PMPI_Get(origin_addr, origin_count, origin_datatype,
                     target_rank, target_disp, target_count, target_datatype,
                     win);
+
   }
 
+  return MPI_SUCCESS;
 }
 
 int MPI_Win_lock_all(int assert, MPI_Win win)

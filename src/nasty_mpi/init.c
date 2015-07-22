@@ -12,7 +12,8 @@
 static Nasty_mpi_config config = {
   .time = maximum_delay,
   .order = random_order,
-  .split_rma_ops = true
+  .split_rma_ops = true,
+  .sync_all_ops = false,
 };
 
 static bool _isInitialized = false;
@@ -25,9 +26,10 @@ static inline void load_config(void)
     if (strcmp(val, "fire_immediate") == 0) {
       config.time = fire_immediate;
     } else if (strcmp(val, "fire_and_sync")) {
-      config.time = fire_and_sync;
-    } else if (strcmp(val, "choose_any")) {
-      config.time = choose_any;
+      config.time = fire_immediate;
+      config.sync_all_ops = true;
+    } else if (strcmp(val, "random_choice")) {
+      config.time = random_choice;
     }
   }
 
@@ -62,16 +64,10 @@ int nasty_mpi_init(int *argc, char ***argv)
   return 0;
 }
 
-Submit_order get_submit_order(void)
+Nasty_mpi_config get_nasty_mpi_config(void)
 {
-  return config.order;
+  return config;
 }
-
-Submit_time get_submit_time(void)
-{
-  return config.time;
-}
-
 void nasty_mpi_finalize(void)
 {
   win_storage_finalize();
