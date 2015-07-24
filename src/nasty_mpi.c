@@ -22,6 +22,27 @@ int MPI_Init(int *argc, char ***argv)
   return result;
 }
 
+int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
+                     MPI_Comm comm, void *baseptr, MPI_Win *win)
+{
+  int result = PMPI_Win_allocate(size, disp_unit, info, comm, baseptr, win);
+
+  if (result == MPI_SUCCESS)
+  {
+    nasty_win_init(*win, comm);
+  }
+
+  return result;
+}
+
+int MPI_Win_lock_all(int assert, MPI_Win win)
+{
+  int rc = PMPI_Win_lock_all(assert, win);
+
+  if (rc == MPI_SUCCESS) nasty_win_lock(win);
+
+  return rc;
+}
 
 int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
             int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
@@ -72,34 +93,17 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
   return MPI_SUCCESS;
 }
 
-int MPI_Win_lock_all(int assert, MPI_Win win)
-{
-  return PMPI_Win_lock_all(assert, win);
-}
 
 int MPI_Win_unlock_all(MPI_Win win)
 {
-  int result = execute_cached_calls(win);
-
-  if (result == MPI_SUCCESS) {
-    return PMPI_Win_unlock_all(win);
-  }
-
-  return result;
+  //execute all cached calls
+  execute_cached_calls(win);
+  //unlock nasty window
+  nasty_win_unlock(win);
+  //do real unock
+  return PMPI_Win_unlock_all(win);
 }
 
-int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
-                     MPI_Comm comm, void *baseptr, MPI_Win *win)
-{
-  int result = PMPI_Win_allocate(size, disp_unit, info, comm, baseptr, win);
-
-  if (result == MPI_SUCCESS)
-  {
-    nasty_win_init(*win, comm);
-  }
-
-  return result;
-}
 
 int MPI_Finalize(void)
 {

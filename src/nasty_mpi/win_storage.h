@@ -53,6 +53,9 @@ int win_storage_init(void);
 void win_storage_finalize(void);
 
 int nasty_win_init(MPI_Win win, MPI_Comm win_comm);
+int nasty_win_lock(MPI_Win win);
+int nasty_win_unlock(MPI_Win win);
+
 DArray get_rma_ops(MPI_Win win);
 
 #endif

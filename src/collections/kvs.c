@@ -115,7 +115,7 @@ static inline int kvs_indexOf(KVstore store, char *key)
   int i;
   for (i = 0; i < store->size; i++)
   {
-    if (strcmp(store->pairs[i]->key, key) == 0)
+    if (store->pairs[i] && strcmp(store->pairs[i]->key, key) == 0)
     {
       return i;
     }
