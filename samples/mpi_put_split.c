@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define COUNT 2
+#define COUNT 3
 #define MEM_RANK 1
 enum {disp_guard = 0, disp_payload = 1};
 int main(int argc, char** argv)
@@ -30,12 +30,8 @@ int main(int argc, char** argv)
 
   printf("Hello world from processor %s on rank %d\n", processor_name, myrank);
   if (myrank == 0) {
-    int payload = 42;
-    int flag = 1;
-
-    MPI_Put( &payload, 1, MPI_INT, MEM_RANK, disp_payload, 1, MPI_INT, win);
-    MPI_Put( &flag, 1, MPI_INT, MEM_RANK, disp_guard, 1, MPI_INT, win);
-
+    int values[3] = {1, 42, 10};
+    MPI_Put( values, 3, MPI_INT, MEM_RANK, 0, 3, MPI_INT, win);
   } 
 
   MPI_Win_unlock_all(win);
@@ -45,6 +41,7 @@ int main(int argc, char** argv)
   if (myrank == MEM_RANK) {
     assert(baseptr[disp_guard] == 1);
     assert(baseptr[disp_payload] == 42);
+    assert(baseptr[2] == 10);
   }
 
   MPI_Win_free(&win);

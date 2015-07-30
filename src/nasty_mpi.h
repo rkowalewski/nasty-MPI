@@ -29,5 +29,8 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
 
 int MPI_Win_create(void *base, MPI_Aint size, int disp_unit,
     MPI_Info info, MPI_Comm comm, MPI_Win *win);
+
+int MPI_Win_flush(int rank, MPI_Win win);
+int MPI_Win_flush_local(int rank, MPI_Win win);
 #endif
 

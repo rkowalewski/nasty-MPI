@@ -85,7 +85,7 @@ int nasty_win_lock(MPI_Win win)
   get_nasty_id(win, nasty_id);
 
   if (strlen(nasty_id) == 0) {
-    debug("window is not properly initialized (no nasty id)!");
+    //debug("window is not properly initialized (no nasty id!");
   }
 
   if (kvs_get(win_storage, nasty_id) == NULL) {
@@ -108,7 +108,7 @@ int nasty_win_unlock(MPI_Win win)
   return 0;
 }
 
-DArray get_rma_ops(MPI_Win win)
+DArray nasty_win_get_mpi_ops(MPI_Win win)
 {
   char nasty_id[NASTY_ID_LEN + 1];
   get_nasty_id(win, nasty_id);

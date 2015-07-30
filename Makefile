@@ -22,7 +22,7 @@ UNAME := $(shell uname -s)
 all: CFLAGS += -DNDEBUG
 all: $(TARGET)
 
-dev: CFLAGS += -Wextra -Werror
+dev: CFLAGS += -Wextra -Werror -pedantic
 dev: $(TARGET)
 	cd lib; \
 	ln -fs ../$(TARGET) lib$(LIB_NAME).so.$(MAJOR); \
@@ -46,7 +46,7 @@ build:
 tests: LDLIBS = -l$(LIB_NAME)
 tests: LDFLAGS = -Wl,-rpath,./lib/ -L./lib/
 tests: dev $(TESTS)
-	sh ./tests/runtests.sh
+	sh ./tests/basic_tests.sh
 
 # The Cleaner
 clean:

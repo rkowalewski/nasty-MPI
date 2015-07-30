@@ -2,6 +2,9 @@
 #define __DARRAY_H
 
 #include <stdlib.h>
+#include <stdarg.h>
+
+typedef int (DArray_filter_fn) (void *el, void *args);
 
 typedef struct DArray
 {
@@ -29,6 +32,10 @@ int DArray_push(DArray array, void *el);
 void *DArray_pop(DArray array);
 
 void DArray_clear_destroy(DArray array);
+
+void DArray_remove_all(DArray array, DArray to_remove);
+
+DArray DArray_filter(DArray array, DArray_filter_fn *filter_fn, void *args);
 
 #define DArray_last(A) ((A)->contents[(A)->size - 1])
 #define DArray_first(A) ((A)->contents[0])
@@ -75,6 +82,11 @@ static inline void *DArray_new(DArray array)
   if (array->element_size <= 0) return NULL;
 
   return calloc(1, array->element_size);
+}
+
+static inline int DArray_is_empty(DArray array)
+{
+  return (!array || array->size == 0);
 }
 
 void DArray_shuffle(DArray array);

@@ -1,5 +1,5 @@
 #include <nasty_mpi.h>
-#include <assert.h>
+#include <stdbool.h>
 
 
 #define _map_put_get_attrs(x) \
@@ -35,6 +35,20 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
   return result;
 }
 
+int MPI_Win_create(void *base, MPI_Aint size, int disp_unit,
+                   MPI_Info info, MPI_Comm comm, MPI_Win *win)
+{
+  int result = PMPI_Win_create(base, size, disp_unit, info, comm, win);
+
+  if (result == MPI_SUCCESS)
+  {
+    nasty_win_init(*win, comm);
+  }
+
+  return result;
+
+}
+
 int MPI_Win_lock_all(int assert, MPI_Win win)
 {
   int rc = PMPI_Win_lock_all(assert, win);
@@ -48,7 +62,7 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
             int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
             MPI_Win win)
 {
-
+  /*
   debug("--caching put---\n"
         "origin_addr: %p\n"
         "origin_count: %d\n"
@@ -60,12 +74,12 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
         origin_addr, origin_count, origin_datatype,
         target_rank, target_disp, target_count, target_datatype
        );
-
+  */
   Nasty_mpi_op op_info;
   op_info.type = rma_put;
   _map_put_get_attrs(op_info.data.put);
 
-  if (handle_rma_call(win, op_info) != MPI_SUCCESS) {
+  if (nasty_mpi_handle_op(win, &op_info) != MPI_SUCCESS) {
     return PMPI_Put(origin_addr, origin_count, origin_datatype,
                     target_rank, target_disp, target_count, target_datatype,
                     win);
@@ -83,7 +97,7 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
   op_info.type = rma_get;
   _map_put_get_attrs(op_info.data.get);
 
-  if (handle_rma_call(win, op_info) != MPI_SUCCESS) {
+  if (nasty_mpi_handle_op(win, &op_info) != MPI_SUCCESS) {
     return PMPI_Get(origin_addr, origin_count, origin_datatype,
                     target_rank, target_disp, target_count, target_datatype,
                     win);
@@ -93,11 +107,24 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
   return MPI_SUCCESS;
 }
 
+int MPI_Win_flush(int rank, MPI_Win win)
+{
+  //execute all cached calls
+  nasty_mpi_execute_cached_calls(win, rank);
+  return PMPI_Win_flush(rank, win);
+}
+
+int MPI_Win_flush_local(int rank, MPI_Win win)
+{
+  //execute all cached calls
+  nasty_mpi_execute_cached_calls(win, rank);
+  return PMPI_Win_flush_local(rank, win);
+}
 
 int MPI_Win_unlock_all(MPI_Win win)
 {
   //execute all cached calls
-  execute_cached_calls(win);
+  nasty_mpi_execute_cached_calls(win, EXECUTE_OPS_OF_ANY_RANK);
   //unlock nasty window
   nasty_win_unlock(win);
   //do real unock

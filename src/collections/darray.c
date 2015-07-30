@@ -28,9 +28,11 @@ void DArray_clear(DArray array)
     {
       if (array->contents[i] != NULL)
       {
-        free(array->contents[i]);
+        void *el = DArray_remove(array, i);
+        free(el);
       }
     }
+    array->size = 0;
   }
 }
 
@@ -125,6 +127,20 @@ static inline void swap(void **src, void **dst, size_t i, size_t j)
   }
 }
 
+void DArray_remove_all(DArray array, DArray to_remove)
+{
+  if (!to_remove || !array) return;
+
+  for (size_t i = 0; i < (size_t) to_remove->size; i++)
+  {
+    void *rem = DArray_get(to_remove, i);
+    for (size_t j = 0; j < (size_t) array->size; j++) {
+      void *el = DArray_get(array, j);
+      if (rem == el) DArray_remove(array, j);
+    }
+  }
+}
+
 void DArray_shuffle(DArray array)
 {
   if (!array || !array->size) return;
@@ -136,6 +152,23 @@ void DArray_shuffle(DArray array)
     i = (random_seq() % j) + 1;
     swap(array->contents, array->contents, i - 1, j - 1);
   }
+}
+
+
+DArray DArray_filter(DArray array, DArray_filter_fn *filter_fn, void* args)
+{
+  if (DArray_is_empty(array)) return NULL;
+
+  DArray filtered = DArray_create(array->element_size, array->size);
+
+  for (int i = 0; i < DArray_count(array); i++) {
+    void *item = DArray_get(array, i);
+
+    if (filter_fn(item, args))
+      DArray_push(filtered, item);
+  }
+
+  return filtered;
 }
 
 /*

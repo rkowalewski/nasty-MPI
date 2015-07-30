@@ -13,5 +13,5 @@ typedef struct {
 
 int MPI_type_hash_equal(const MPI_type_hash_t *alpha,
                        const MPI_type_hash_t *beta);
-void MPI_Type_hash(MPI_Datatype type, int cnt, MPI_type_hash_t *dt_hash);
+void MPI_type_hash(MPI_Datatype type, int cnt, MPI_type_hash_t *dt_hash);
 #endif
