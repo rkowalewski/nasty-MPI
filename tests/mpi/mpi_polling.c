@@ -6,6 +6,7 @@
 
 #define COUNT 2
 #define MEM_RANK 40
+
 enum {disp_guard = 0, disp_payload = 1};
 int main(int argc, char** argv)
 {

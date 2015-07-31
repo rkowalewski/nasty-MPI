@@ -2,12 +2,15 @@
 #define __NASTY_MPI_OP_H
 
 #include <nasty_mpi/mpi_type_hash.h>
+#include <collections/darray.h>
+#include <stddef.h>
+
+#define MAX_OP_TYPE_STRLEN 100
 
 typedef struct {
   MPI_type_hash_t origin_type_hash;
   MPI_type_hash_t target_type_hash;
-  int target_disp;
-  int target_rank;
+  size_t params_hash;
   //Dirty, we have to refactor this and move out to a separate data structure
   int lookup_count;
 } Nasty_mpi_op_signature_t;
@@ -53,8 +56,11 @@ typedef struct Nasty_mpi_op
   int is_sent;
 } Nasty_mpi_op;
 
-int Nasty_mpi_op_signature_equal(Nasty_mpi_op_signature_t *alpha, Nasty_mpi_op_signature_t *beta);
 void Nasty_mpi_op_signature(Nasty_mpi_op *op, Nasty_mpi_op_signature_t *call_signature);
+void Nasty_mpi_op_type_str(Nasty_mpi_op *op, char* str);
+DArray Nasty_mpi_op_divide(Nasty_mpi_op *op);
+
+int Nasty_mpi_op_signature_equal(Nasty_mpi_op_signature_t *alpha, Nasty_mpi_op_signature_t *beta);
 int Nasty_mpi_op_is_divisible(Nasty_mpi_op *op);
 
 

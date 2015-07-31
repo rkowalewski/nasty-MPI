@@ -2,6 +2,7 @@
 #include <time.h>
 #include <collections/darray.h>
 #include <util/random.h>
+#include <assert.h>
 
 DArray DArray_create(size_t element_size, size_t initial_capacity)
 {
@@ -169,6 +170,18 @@ DArray DArray_filter(DArray array, DArray_filter_fn *filter_fn, void* args)
   }
 
   return filtered;
+}
+
+int DArray_push_all(DArray dst, DArray src)
+{
+  if (!dst || !src || DArray_count(src) == 0) return -1;
+
+  assert(dst->element_size == src->element_size);
+
+  for (size_t i = 0; i < (size_t) src->size; i++)
+    DArray_push(dst, DArray_get(src, i));
+
+  return 0;
 }
 
 /*

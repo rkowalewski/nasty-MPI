@@ -86,6 +86,19 @@ char *test_expand_contract()
   return NULL;
 }
 
+static void print_array(DArray array)
+{
+  int *val;
+  for (int i = 0; i < array->size; i++)
+  {
+    val = DArray_get(array, i);
+    if (val)
+    {
+      printf("item: %d, value :%d\n", i, *val);
+    }
+  }
+}
+
 char *test_push_pop()
 {
   mu_assert(array->size == 2, "Wrong size.");
@@ -113,18 +126,35 @@ char *test_push_pop()
   return NULL;
 }
 
-void print_array(DArray array)
+char *test_push_all()
 {
+  int values[2] = {10, 20};
+
+  DArray_set(array, 0, (void*) &values[0]);
+  DArray_set(array, 1, (void*) &values[1]);
+
+  DArray src = DArray_create(array->element_size, 10);
+
   int *val;
-  for (int i = 0; i < array->size; i++)
+  for (size_t idx = 0; idx < 5; idx++)
   {
-    val = (int *) array->contents[i];
-    if (val)
-    {
-      printf("item: %d, value :%d\n", i, *val);
-    }
+    val = DArray_new(src);
+    *val = idx;
+    DArray_push(src, (void*) val);
   }
+
+  int old_size = array->size;
+  DArray_push_all(array, src);
+  mu_assert(array->size == old_size + src->size, "wrong size"); 
+
+  DArray_remove(array, 0);
+  DArray_remove(array, 1);
+
+  DArray_clear_destroy(src);
+
+  return NULL;
 }
+
 
 /*
 
@@ -186,6 +216,7 @@ char * all_tests()
   mu_run_test(test_get);
   mu_run_test(test_remove);
   mu_run_test(test_push_pop);
+  mu_run_test(test_push_all);
   mu_run_test(test_expand_contract);
   mu_run_test(test_destroy);
   //mu_run_test(test_shuffle_sort);

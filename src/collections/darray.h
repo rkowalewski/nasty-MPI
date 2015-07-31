@@ -35,6 +35,8 @@ void DArray_clear_destroy(DArray array);
 
 void DArray_remove_all(DArray array, DArray to_remove);
 
+int DArray_push_all(DArray dst, DArray src);
+
 DArray DArray_filter(DArray array, DArray_filter_fn *filter_fn, void *args);
 
 #define DArray_last(A) ((A)->contents[(A)->size - 1])

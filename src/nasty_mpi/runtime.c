@@ -21,7 +21,7 @@ static inline int get_origin_rank(MPI_Win win)
 static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
 {
 
-  if (op_info == NULL) return MPI_SUCCESS;
+  if (op_info == NULL || op_info->is_sent) return MPI_SUCCESS;
   int rc = -1;
 
   if (op_info->type == rma_put)
@@ -80,51 +80,20 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
 
 static inline void split_ops(DArray arr_ops)
 {
-  for (size_t i = 0; i < (size_t) arr_ops->size; i++) {
+  size_t num = (size_t) arr_ops->size;
+  for (size_t i = 0; i < num; i++) {
     Nasty_mpi_op *op_info = DArray_get(arr_ops, i);
 
-    if (!op_info || !Nasty_mpi_op_is_divisible(op_info)) continue;
+    DArray divided_ops = Nasty_mpi_op_divide(op_info);
 
-    debug("splitting %s!", "operations");
-
-    MPI_Aint lb, extent, disp, base;
-    int offset;
-    Nasty_mpi_op *new_op;
-
-    if (op_info->type == rma_put) {
-      Nasty_mpi_put put = op_info->data.put;
-      MPI_Get_address(put.origin_addr, &base);
-      MPI_Type_get_extent(put.origin_datatype, &lb, &extent);
-      for (disp = put.target_disp, offset = 0; disp < put.target_disp + put.target_count; disp++, offset++) {
-        new_op = DArray_new(arr_ops);
-        new_op->type = rma_put;
-        new_op->data.put = put;
-        new_op->data.put.origin_count = 1;
-        new_op->data.put.origin_addr = (void*) (base + offset * extent);
-        new_op->data.put.target_disp = disp;
-        new_op->data.put.target_count = 1;
-        Nasty_mpi_op_signature(new_op, &new_op->signature);
-        DArray_push(arr_ops, new_op);
-      }
-    } else if (op_info->type == rma_get) {
-      Nasty_mpi_get get = op_info->data.get;
-      MPI_Get_address(get.origin_addr, &base);
-      MPI_Type_get_extent(get.origin_datatype, &lb, &extent);
-      for (disp = get.target_disp, offset = 0; disp < get.target_disp + get.target_count; disp++, offset++) {
-        new_op = DArray_new(arr_ops);
-        new_op->type = rma_get;
-        new_op->data.get = get;
-        new_op->data.get.origin_count = 1;
-        new_op->data.get.origin_addr = (void*) (base + offset * extent);
-        new_op->data.get.target_disp = disp;
-        new_op->data.get.target_count = 1;
-        Nasty_mpi_op_signature(new_op, &new_op->signature);
-        DArray_push(arr_ops, new_op);
-      }
+    if (divided_ops) {
+      debug("dividing 1 old mpi operation in %d separate operations", DArray_count(divided_ops));
+      DArray_push_all(arr_ops, divided_ops);
+      //free the old operation
+      DArray_remove(arr_ops, i);
+      DArray_free(op_info);
+      DArray_destroy(divided_ops);
     }
-
-    DArray_remove(arr_ops, i);
-    DArray_free(op_info);
   }
 }
 
@@ -139,8 +108,7 @@ static inline int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
 
   if (!arr_ops) return 0;
 
-  Nasty_mpi_op_signature_t signature;
-  signature.lookup_count = 0;
+  Nasty_mpi_op_signature_t signature = {.lookup_count = 0};
   Nasty_mpi_op_signature(op, &signature);
   size_t i;
   for (i = 0; i < (size_t) arr_ops->size; i++) {
@@ -148,15 +116,10 @@ static inline int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
     if (cached_op && Nasty_mpi_op_signature_equal(&signature, &cached_op->signature)) {
       cached_op->signature.lookup_count++;
       if (cached_op->signature.lookup_count == MAX_SIGNATURE_LOOKUP_COUNT) {
-        const char* type_str;
-        if (cached_op->type == rma_put)
-          type_str = "MPI_Put";
-        else if (cached_op->type == rma_get)
-          type_str = "MPI_Get";
-        else
-          type_str = "undefined";
+        char type_str[MAX_OP_TYPE_STRLEN];
+        Nasty_mpi_op_type_str(cached_op, type_str);
 
-        fprintf(stderr, "The same %s operation has been fired already %d times! Probably a flush is missing!\n", type_str, cached_op->signature.lookup_count);
+        debug("The same %s operation has been fired already %d times! Probably a flush is missing!\n", type_str, cached_op->signature.lookup_count);
         //DArray_remove(arr_ops, i);
         /*
         if (!cached_op->is_sent) {
