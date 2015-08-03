@@ -117,7 +117,7 @@ static inline int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
         char type_str[MAX_OP_TYPE_STRLEN];
         Nasty_mpi_op_type_str(cached_op, type_str);
 
-        debug("The same %s operation has been fired already %d times! Probably a flush is missing!\n", type_str, cached_op->signature.lookup_count);
+        debug("The same %s operation has been fired already %d times without any synchronization action!\n", type_str, cached_op->signature.lookup_count);
         //DArray_remove(arr_ops, i);
         /*
         if (!cached_op->is_sent) {

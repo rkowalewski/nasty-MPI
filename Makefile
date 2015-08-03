@@ -13,7 +13,7 @@ OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 TEST_SRC=$(wildcard tests/**/*_tests.c)
 TESTS=$(patsubst %.c,%,$(TEST_SRC))
 
-SAMPLES_SRC=$(wildcard samples/*.c)
+SAMPLES_SRC=$(wildcard samples/*.c samples/**/*.c)
 SAMPLES=$(patsubst samples/%.c,bin/%,$(SAMPLES_SRC))
 
 LIB_VERSION=$(MAJOR).$(MINOR)
@@ -45,26 +45,34 @@ build:
 	@mkdir -p lib
 
 # The Unit Tests
-.PHONY: tests mpi_samples
+.PHONY: tests samples
 tests: LDLIBS = -l$(LIB_NAME)
 tests: LDFLAGS = -Wl,-rpath,./lib/ -L./lib/
 tests: CFLAGS += -Isrc
 tests: all $(TESTS)
 	sh ./tests/basic_tests.sh
 
-mpi_samples: $(SAMPLES)
-	sh ./samples/runSamples.sh
+samples: $(SAMPLES)
+	bash ./samples/runSamples.sh
 
-$(SAMPLES): $(SAMPLES_SRC)
-	$(CC) $(CFLAGS) -o $@ $< 
+$(SAMPLES): bin/% : samples/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $< -o $@ 
 
 # The Cleaner
-clean:
+clean-lib:
 	rm -rf build $(OBJECTS) $(TESTS)
 	rm -f tests/tests.log
 	rm -rf bin/*
 	find . -name "*.gc*" -exec rm {} \;
 	rm -rf `find . -name "*.dSYM" -print`
+
+clean-samples:
+	rm -rf $(SAMPLES)
+	rm -f samples/tests.log
+
+clean-all: clean-lib clean-tests
+
 
 # The Install
 install: all
