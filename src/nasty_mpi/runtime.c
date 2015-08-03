@@ -26,7 +26,6 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
 
   if (op_info->type == rma_put)
   {
-    /*
     debug("--executing actual put---\n"
           "origin_rank: %d\n"
           "origin_addr: %p\n"
@@ -40,7 +39,6 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
           op_info->data.put.origin_addr, op_info->data.put.origin_count, op_info->data.put.origin_datatype,
           op_info->data.put.target_rank, op_info->data.put.target_disp, op_info->data.put.target_count, op_info->data.put.target_datatype
          );
-    */
     rc = PMPI_Put(
            op_info->data.put.origin_addr, op_info->data.put.origin_count, op_info->data.put.origin_datatype,
            op_info->data.put.target_rank, op_info->data.put.target_disp, op_info->data.put.target_count, op_info->data.put.target_datatype,

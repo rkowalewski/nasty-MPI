@@ -86,6 +86,7 @@ char *test_expand_contract()
   return NULL;
 }
 
+/*
 static void print_array(DArray array)
 {
   int *val;
@@ -98,6 +99,7 @@ static void print_array(DArray array)
     }
   }
 }
+*/
 
 char *test_push_pop()
 {

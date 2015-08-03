@@ -9,7 +9,7 @@
 enum {disp_guard = 0, disp_payload = 1};
 int main(int argc, char** argv)
 {
-  int myrank/*, nprocs*/;
+  int myrank;
   MPI_Win win;
   int *baseptr;
   MPI_Aint local_size;
@@ -28,7 +28,6 @@ int main(int argc, char** argv)
 
   MPI_Win_lock_all(0, win);
 
-  printf("Hello world from processor %s on rank %d\n", processor_name, myrank);
   if (myrank == 0) {
     int values[3] = {1, 42, 10};
     MPI_Put( values, 3, MPI_INT, MEM_RANK, 0, 3, MPI_INT, win);
