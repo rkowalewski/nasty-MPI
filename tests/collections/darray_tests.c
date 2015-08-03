@@ -1,5 +1,6 @@
 #include "../minunit.h"
 #include <collections/darray.h>
+#include <util/random.h>
 #include <assert.h>
 #include <stdlib.h>
 
@@ -156,9 +157,21 @@ char *test_push_all()
 
   return NULL;
 }
-
-
 /*
+char* test_shuffle()
+{
+  unsigned test;
+
+  for (int i = 0; i < 20; i++)
+  {
+    test = random_seq();
+    printf("random number: %u", test);
+  }
+
+  return NULL;
+}
+
+
 
 int sort_fn(const void *a, const void* b)
 {
@@ -221,7 +234,6 @@ char * all_tests()
   mu_run_test(test_push_all);
   mu_run_test(test_expand_contract);
   mu_run_test(test_destroy);
-  //mu_run_test(test_shuffle_sort);
 
 
   return NULL;

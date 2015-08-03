@@ -5,6 +5,7 @@
 #include <nasty_mpi/mpi_op.h>
 #include <macros/logging.h>
 #include <util/random.h>
+#include <time.h>
 
 //if the programmer fires 50 times the same mpi operation without a flush, we forward it to the mpi library...
 #define MAX_SIGNATURE_LOOKUP_COUNT 50
@@ -16,6 +17,14 @@ static inline int get_origin_rank(MPI_Win win)
   MPI_Win_get_attr(win, KEY_ORIGIN_RANK, &rank_attr, &flag);
   if (flag) rank = (int) (MPI_Aint) rank_attr;
   return rank;
+}
+
+static inline void _sleep(unsigned int millis)
+{
+  struct timespec ts;
+  ts.tv_sec = millis / 1000;
+  ts.tv_nsec = (millis % 1000) * 1000000;
+  nanosleep(&ts, NULL);
 }
 
 static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
@@ -189,6 +198,19 @@ int filter_by_rank(void* el, void* args)
   return 0;
 }
 
+static inline size_t _dumpArray(DArray array)
+{
+  size_t count = 0;
+  for (size_t i = 0; i < (size_t) array->size; i++)
+  {
+    Nasty_mpi_op *item = DArray_get(array, i);
+    if (item) count++;
+  }
+
+  return count;
+}
+
+
 int nasty_mpi_execute_cached_calls(MPI_Win win, int rank)
 {
   DArray all_ops = nasty_win_get_mpi_ops(win);
@@ -205,9 +227,12 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int rank)
 
   size_t i;
   int res = MPI_SUCCESS;
-  for (i = 0; i < (size_t) ops_to_process->size && res == MPI_SUCCESS; i++)
+  for (i = 0; i < (size_t) ops_to_process->size; i++)
   {
     Nasty_mpi_op *op_info = DArray_get(ops_to_process, i);
+    //add some latency by sleep for a random number of milliseconds (between 0 and 1000)
+    if (op_info) _sleep(random_seq() % 1500);
+
     res = invoke_mpi(win, op_info, false);
 
     if (res != MPI_SUCCESS) {

@@ -1,8 +1,8 @@
 #include <mpi.h>
 #include <assert.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #define COUNT 2
 #define SENDER 0
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
   MPI_Get_processor_name(processor_name, &name_len);
 
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-  
+
   local_size = (myrank == MEM_RANK) ? MEM_COUNT : 0;
 
   MPI_Win_allocate(local_size * sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &baseptr, &win);
@@ -45,12 +45,17 @@ int main(int argc, char** argv)
     int flag = 1;
 
     MPI_Put( &payload, 1, MPI_INT, MEM_RANK, disp_payload, 1, MPI_INT, win);
-    //Flush 1
-    //MPI_Win_flush(MEM_RANK, win);
-    
     MPI_Put( &flag, 1, MPI_INT, MEM_RANK, disp_guard, 1, MPI_INT, win);
-    //Flush 2
+    /*
+    struct timespec ts;
+    ts.tv_sec = 500 / 1000;
+    ts.tv_nsec = (500 % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+    */
+    //Flush 1
     MPI_Win_flush(MEM_RANK, win);
+
+    //Flush 2
 
   } else if (myrank == RECEIVER) {
     int guard = 0, value;

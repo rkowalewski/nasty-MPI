@@ -3,7 +3,7 @@ LIB_NAME=nasty_mpi
 MAJOR=0
 MINOR=1
 
-CFLAGS=-g -O3 -Wall -std=c11  $(OPTFLAGS)
+CFLAGS=-g -O3 -Wall -std=gnu11  $(OPTFLAGS)
 LIBS=$(OPTLIBS)
 PREFIX?=/usr/local
 
@@ -60,16 +60,16 @@ $(SAMPLES): bin/% : samples/%.c
 	$(CC) $(CFLAGS) $< -o $@ 
 
 # The Cleaner
-clean-lib:
+clean:
 	rm -rf build $(OBJECTS) $(TESTS)
 	rm -f tests/tests.log
-	rm -rf bin/*
 	find . -name "*.gc*" -exec rm {} \;
 	rm -rf `find . -name "*.dSYM" -print`
 
 clean-samples:
 	rm -rf $(SAMPLES)
 	rm -f samples/tests.log
+	rm -rf bin/*
 
 clean-all: clean-lib clean-tests
 

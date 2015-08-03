@@ -148,10 +148,16 @@ void DArray_shuffle(DArray array)
 
   size_t i, j;
 
-  for (j = array->size - 1; j > 1; j--)
-  {
-    i = (random_seq() % j) + 1;
-    swap(array->contents, array->contents, i - 1, j - 1);
+  if (array->size == 2) {
+    i = (size_t) (random_seq() % 2);
+    j = 1 - i;
+    swap(array->contents, array->contents, i, j);
+  } else {
+    for (j = array->size - 1; j > 1; j--)
+    {
+      i = (random_seq() % j) + 1;
+      swap(array->contents, array->contents, i - 1, j - 1);
+    }
   }
 }
 
