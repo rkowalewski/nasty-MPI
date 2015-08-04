@@ -9,7 +9,8 @@
 
 #define debug(M, ...) fprintf(stderr, "DEBUG %s:%d: " M "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 #define clean_errno() (errno == 0 ? "None" : strerror(errno))
-#define log_err(M, ...) fprintf(stderr, "[ERROR] (%s:%d: errno: %s) " M "\n", __FILE__, __LINE__, clean_errno(), ##__VA_ARGS__)
+#define log_err(M, ...) \
+  fprintf(stderr, "[ERROR] (%s:%d: errno: %s) " M "\n", __FILE__, __LINE__, clean_errno(), ##__VA_ARGS__)
 
 #define mu_suite_start() char *message = NULL
 
@@ -18,7 +19,7 @@
     message = test(); tests_run++; if (message) return message;
 
 #define RUN_TESTS(name) int main(int argc, char *argv[]) {\
-    argc = 1; \
+    (void) argc;\
     debug("----- RUNNING: %s", argv[0]);\
     printf("----\nRUNNING: %s\n", argv[0]);\
     char *result = name();\

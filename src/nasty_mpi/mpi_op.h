@@ -17,8 +17,8 @@ typedef struct {
 
 typedef enum
 {
-  rma_put,
   rma_get,
+  rma_put,
 } Nasty_mpi_op_type;
 
 

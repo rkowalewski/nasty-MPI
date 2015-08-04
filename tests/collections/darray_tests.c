@@ -148,12 +148,44 @@ char *test_push_all()
 
   int old_size = array->size;
   DArray_push_all(array, src);
-  mu_assert(array->size == old_size + src->size, "wrong size"); 
+  mu_assert(array->size == old_size + src->size, "wrong size");
 
   DArray_remove(array, 0);
   DArray_remove(array, 1);
 
   DArray_clear_destroy(src);
+
+  return NULL;
+}
+
+char * test_natural_sort(void)
+{
+  int vals[3] = {1, 2, 3};
+  DArray arr = DArray_create(sizeof(int), 10);
+  arr->size = 8;
+
+  DArray_set(arr, 1, &vals[0]);
+  DArray_set(arr, 4, &vals[1]);
+  DArray_set(arr, 7, &vals[2]);
+
+  for (size_t i = 0; i < (size_t) DArray_count(arr); i++)
+  {
+  }
+
+  DArray_sort(arr, NULL);
+
+  for (size_t i = 0; i < (size_t) DArray_count(arr); i++)
+  {
+    void *item = DArray_get(arr, i);
+    if (i > 2) {
+      mu_assert(!item, "must be null");
+    }
+    else {
+      mu_assert(item, "must not be null");
+    }
+  }
+
+  DArray_destroy(arr);
 
   return NULL;
 }
@@ -234,9 +266,10 @@ char * all_tests()
   mu_run_test(test_push_all);
   mu_run_test(test_expand_contract);
   mu_run_test(test_destroy);
+  mu_run_test(test_natural_sort);
 
 
   return NULL;
 }
 
-RUN_TESTS(all_tests);
+RUN_TESTS(all_tests)

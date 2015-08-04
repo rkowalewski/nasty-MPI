@@ -48,13 +48,13 @@ build:
 .PHONY: tests samples
 tests: LDLIBS = -l$(LIB_NAME)
 tests: LDFLAGS = -Wl,-rpath,./lib/ -L./lib/
-tests: CFLAGS += -Isrc
+tests: CFLAGS += -Isrc -Wextra -Werror
 tests: all $(TESTS)
 	sh ./tests/basic_tests.sh
 
 samples: $(SAMPLES)
 	bash ./samples/runSamples.sh
-
+$(SAMPLES): CFLAGS += -Wextra -Werror
 $(SAMPLES): bin/% : samples/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $< -o $@ 

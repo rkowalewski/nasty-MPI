@@ -6,3 +6,4 @@ bin
 tests/**/*_tests
 tests/*.log
 samples/*.log
+.*.swp

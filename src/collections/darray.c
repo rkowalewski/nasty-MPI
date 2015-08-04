@@ -3,6 +3,8 @@
 #include <collections/darray.h>
 #include <util/random.h>
 #include <assert.h>
+#include <stddef.h>
+#include <stdio.h>
 
 DArray DArray_create(size_t element_size, size_t initial_capacity)
 {
@@ -190,13 +192,38 @@ int DArray_push_all(DArray dst, DArray src)
   return 0;
 }
 
-/*
-void DArray_sort(DArray array, int(*sort_fn)(const void *, const void *))
+int DArray_natural_sort(const void *a, const void *b)
 {
-  if (!array) return;
-  qsort(array->contents, DArray_count(array), sizeof(void *), sort_fn);
+  const void *elementA = * (void **) a;
+  const void *elementB = * (void **) b;
+
+  if ( !elementA && !elementB)
+    return 0;
+  else if (!elementA)
+    return 1;
+  else if (!elementB)
+    return -1;
+
+  ptrdiff_t diff = (ptrdiff_t) elementA - (ptrdiff_t) elementB;
+
+  if (diff > 0)
+    return 1;
+  else if (diff < 0)
+    return -1;
+  else
+    return 0;
 }
 
+void DArray_sort(DArray array, int(*compar)(const void *, const void *))
+{
+  if (! (array && array->size)) return;
+
+  if (!compar) compar = DArray_natural_sort;
+
+  qsort(array->contents, array->capacity, sizeof(void *), compar);
+}
+
+/*
 void* DArray_bsearch(const void **key, DArray arr,
                          int (*sort_fn)(const void *, const void *))
 {

@@ -3,6 +3,7 @@
 -Wall
 -Wextra
 -Werror
--pedantic
 -std=gnu11
+-pedantic
+-Wno-variadic-macros
 

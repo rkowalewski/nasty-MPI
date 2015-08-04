@@ -6,6 +6,8 @@
 
 typedef int (DArray_filter_fn) (void *el, void *args);
 
+typedef int (DArray_sort_fn) (const void *a, const void *b);
+
 typedef struct DArray
 {
   int size;
@@ -44,6 +46,7 @@ DArray DArray_filter(DArray array, DArray_filter_fn *filter_fn, void *args);
 #define DArray_end(A) ((A)->size)
 #define DArray_count(A) DArray_end(A)
 #define DArray_capacity(A) ((A)->capacity)
+#define DArray_free(E) free((E))
 
 
 #define DARRAY_FOREACH(VAR, TYPE, ARRAY) \
@@ -92,11 +95,11 @@ static inline int DArray_is_empty(DArray array)
 }
 
 void DArray_shuffle(DArray array);
+void DArray_sort(DArray array, int(*compar)(const void *, const void *));
 
-#define DArray_free(E) free((E))
+
+
 /*
-void DArray_sort(DArray array, int(*sort_fn)(const void *, const void *));
-
 void* DArray_bsearch(const void **key, DArray array,
                          int (*sort_fn)(const void *, const void *));
 */
