@@ -6,7 +6,6 @@
   (x).origin_addr = origin_addr; \
   (x).origin_count  = origin_count; \
   (x).origin_datatype = origin_datatype; \
-  (x).target_rank = target_rank; \
   (x).target_disp = target_disp; \
   (x).target_count = target_count; \
   (x).target_datatype = target_datatype;
@@ -75,6 +74,7 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
        );
   Nasty_mpi_op op_info;
   op_info.type = rma_put;
+  op_info.target_rank = target_rank;
   _map_put_get_attrs(op_info.data.put);
 
   if (nasty_mpi_handle_op(win, &op_info) != MPI_SUCCESS) {
@@ -91,8 +91,20 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
             int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
             MPI_Win win)
 {
+  debug("--caching get---\n"
+        "origin_addr: %p\n"
+        "origin_count: %d\n"
+        "origin_datatype: %d\n"
+        "target_rank: %d\n"
+        "target_disp: %td\n"
+        "target_count: %d\n"
+        "target_datatype: %d\n",
+        origin_addr, origin_count, origin_datatype,
+        target_rank, target_disp, target_count, target_datatype
+       );
   Nasty_mpi_op op_info;
   op_info.type = rma_get;
+  op_info.target_rank = target_rank;
   _map_put_get_attrs(op_info.data.get);
 
   if (nasty_mpi_handle_op(win, &op_info) != MPI_SUCCESS) {
@@ -122,7 +134,8 @@ int MPI_Win_flush_local(int rank, MPI_Win win)
 int MPI_Win_unlock_all(MPI_Win win)
 {
   //execute all cached calls
-  nasty_mpi_execute_cached_calls(win, EXECUTE_OPS_OF_ANY_RANK);
+  int rc = nasty_mpi_execute_cached_calls(win, EXECUTE_OPS_OF_ANY_RANK);
+  if (rc != MPI_SUCCESS) return rc;
   //unlock nasty window
   nasty_win_unlock(win);
   //do real unock

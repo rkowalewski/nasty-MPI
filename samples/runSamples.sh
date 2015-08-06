@@ -2,8 +2,23 @@
 
 #export LD_PRELOAD=./lib/libnasty_mpi.so;
 rm -f samples/tests.log
-error=0
+
 tests=()
+submit_times=('maximum_delay' 'fire_immediate')
+submit_orders=('random_order' 'program_order' 'get_after_put' 'put_after_get')
+
+function run_tests()
+{
+  counter=0;
+  error=0;
+  while [ ${counter} -lt 5 -a ${error} -eq 0 ];
+  do
+    mpirun -n 48 ${1} >> samples/tests.log 2>&1;
+    error=$?
+    counter=$((counter + 1));
+  done
+  return ${error};
+}
 
 for file in $(find bin -type f -executable);
 do
@@ -11,36 +26,62 @@ do
 done
 
 total=${#tests[@]}
+error_global=0
 
 for ((i=0; i < $total; i++))
 do
   file=${tests[i]};
-  echo "-------------Running Test: ${file} ---------------" >> samples/tests.log;
-  #echo "-------------Running Test: ${file} ---------------";
-  counter=0;
-  while [ ${error} -eq 0 -a ${counter} -lt 10 ];
-  do
-    mpirun -n 48 ${file}>>samples/tests.log 2>&1;
+  echo "-------------RUNNING TEST (File: ${file})---------------" | tee -a samples/tests.log;
+  error_file=0;
+  if [ -z "${LD_PRELOAD}" ];
+  then
+    run_tests ${file};
     if [ $? -ne 0 ];
     then
-      error=1;
-      echo $file ERROR;
+      error_file=1;
     fi
-    counter=$((counter + 1));
-  done
+  else
+    for submit_time in ${submit_times[@]};
+    do
+      export SUBMIT_TIME="${submit_time}";
+      echo "submit_time: ${submit_time}" | tee -a samples/tests.log;
+      if [ ${submit_time} == "fire_immediate" ];
+      then
+        run_tests ${file};
+        if [ $? -ne 0 ];
+        then
+          echo "submit_time: ${submit_time} --> ERROR" | tee -a samples/tests.log;
+          error_file=1;
+        else
+          echo "submit_time: ${submit_time} --> PASS";
+        fi
+      else
+        for submit_order in ${submit_orders[@]};
+        do
+          export SUBMIT_ORDER="${submit_order}";
+          run_tests ${file};
+          if [ $? -ne 0 ];
+          then
+            echo "--submit_order: ${submit_order} --> ERROR" | tee -a samples/tests.log;
+            error_file=1;
+          else
+            echo "--submit_order: ${submit_order} --> PASS";
+          fi
+        done
+      fi
+    done
+  fi  
 
-  if [ ${error} -eq 0 ]
+  if [ ${error_file} -ne 0 ]
   then
-    echo $file PASS;
+    error_global=1;
   fi
 
-  if [ $i -ne $((total - 1)) ]
-  then
-    error=0;
-  fi
+  error_file=0;
+  echo '-------------TEST ENDED---------------' | tee -a samples/tests.log;
 done
 
-if [ ${error} -eq 1 ];
+if [ ${error_global} -eq 1 ];
 then
   echo "There happend some errors: please see samples/tests.log"
 fi

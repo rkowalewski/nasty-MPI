@@ -16,6 +16,15 @@ static KVstore win_storage = NULL;
 //tear down for nasty MPI attributes - execution when window gets freed
 int MPEi_nasty_id_free(MPI_Win win, int keyval, void *attr_val, void *extra_state);
 
+static inline int get_origin_rank(MPI_Win win)
+{
+  void *rank_attr;
+  int flag, rank = -1;
+  MPI_Win_get_attr(win, KEY_ORIGIN_RANK, &rank_attr, &flag);
+  if (flag) rank = (int) (MPI_Aint) rank_attr;
+  return rank;
+}
+
 int win_storage_init(void)
 {
   win_storage = kvs_create(5, 5);
@@ -49,8 +58,12 @@ static inline void get_nasty_id(MPI_Win win, char *dst)
 
   //copy nasty_id to target str
   size_t len = NASTY_ID_LEN + 1;
+#ifdef NDEBUG
+  snprintf(dst, len, "%u", nasty_id);
+#else
   int n = snprintf(dst, len, "%u", nasty_id);
   assert(((size_t) n) < len);
+#endif
 }
 
 int nasty_win_init(MPI_Win win, MPI_Comm win_comm)

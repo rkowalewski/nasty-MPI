@@ -30,27 +30,29 @@ int Nasty_mpi_op_signature_equal(Nasty_mpi_op_signature_t *alpha, Nasty_mpi_op_s
 void Nasty_mpi_op_signature(Nasty_mpi_op *op, Nasty_mpi_op_signature_t *call_signature)
 {
   assert(call_signature);
+  assert(op);
+
+  //hash over values of origin_addr, target_rank, target_disp, type
+  size_t to_hash = op->target_rank + op->type;
 
   if (op->type == rma_put) {
     Nasty_mpi_put put = op->data.put;
     MPI_type_hash(put.origin_datatype, put.origin_count, &call_signature->origin_type_hash);
     MPI_type_hash(put.target_datatype, put.target_count, &call_signature->target_type_hash);
-    //hash over values of origin_addr, target_rank, target_disp
-    size_t origin_addr = (size_t) put.origin_addr;
-    origin_addr += put.target_disp + put.target_rank + rma_put;
-    call_signature->params_hash = hash(origin_addr);
+    to_hash += (size_t) put.origin_addr;
+    to_hash += put.target_disp;
 
 
   } else if (op->type == rma_get) {
     Nasty_mpi_get get = op->data.get;
     MPI_type_hash(get.origin_datatype, get.origin_count, &call_signature->origin_type_hash);
     MPI_type_hash(get.target_datatype, get.target_count, &call_signature->target_type_hash);
-    //hash over values of origin_addr, target_rank, target_disp
-    size_t origin_addr = (size_t) get.origin_addr;
-    origin_addr += get.target_disp + get.target_rank + rma_get;
-    call_signature->params_hash = hash(origin_addr);
+    to_hash += (size_t) get.origin_addr;
+    to_hash += get.target_disp;
   }
 
+  call_signature->params_hash = hash(to_hash);
+  call_signature->lookup_count = 0;
 }
 
 int Nasty_mpi_op_is_divisible(Nasty_mpi_op *op)
@@ -107,6 +109,8 @@ DArray Nasty_mpi_op_divide(Nasty_mpi_op *op_info)
     for (disp = put.target_disp, offset = 0; disp < put.target_disp + put.target_count; disp++, offset++) {
       new_op = DArray_new(divided_ops);
       new_op->type = rma_put;
+      new_op->target_rank = op_info->target_rank;
+      new_op->is_sent = 0;
       new_op->data.put = put;
       new_op->data.put.origin_count = 1;
       new_op->data.put.origin_addr = (void*) (base + offset * extent);
@@ -123,6 +127,8 @@ DArray Nasty_mpi_op_divide(Nasty_mpi_op *op_info)
     for (disp = get.target_disp, offset = 0; disp < get.target_disp + get.target_count; disp++, offset++) {
       new_op = DArray_new(divided_ops);
       new_op->type = rma_get;
+      new_op->target_rank = op_info->target_rank;
+      new_op->is_sent = 0;
       new_op->data.get = get;
       new_op->data.get.origin_count = 1;
       new_op->data.get.origin_addr = (void*) (base + offset * extent);

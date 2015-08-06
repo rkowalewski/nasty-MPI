@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
 #define COUNT 2
 #define SENDER 0
@@ -19,10 +20,6 @@ int main(int argc, char** argv)
   MPI_Aint local_size;
 
   MPI_Init(&argc, &argv);
-
-  char processor_name[MPI_MAX_PROCESSOR_NAME];
-  int name_len;
-  MPI_Get_processor_name(processor_name, &name_len);
 
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
@@ -46,12 +43,6 @@ int main(int argc, char** argv)
 
     MPI_Put( &payload, 1, MPI_INT, MEM_RANK, disp_payload, 1, MPI_INT, win);
     MPI_Put( &flag, 1, MPI_INT, MEM_RANK, disp_guard, 1, MPI_INT, win);
-    /*
-    struct timespec ts;
-    ts.tv_sec = 500 / 1000;
-    ts.tv_nsec = (500 % 1000) * 1000000;
-    nanosleep(&ts, NULL);
-    */
     //Flush 1
     MPI_Win_flush(MEM_RANK, win);
 
@@ -61,6 +52,7 @@ int main(int argc, char** argv)
     int guard = 0, value;
     while (!guard)
     {
+    //nanosleep(&ts, NULL);
       MPI_Get(&guard, 1, MPI_INT, MEM_RANK, disp_guard, 1, MPI_INT, win);
       //Flush 3
       MPI_Win_flush(MEM_RANK, win);

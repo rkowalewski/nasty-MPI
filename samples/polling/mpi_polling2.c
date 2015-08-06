@@ -20,10 +20,6 @@ int main(int argc, char** argv)
 
   MPI_Init(&argc, &argv);
 
-  char processor_name[MPI_MAX_PROCESSOR_NAME];
-  int name_len;
-  MPI_Get_processor_name(processor_name, &name_len);
-
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   
   local_size = (myrank == MEM_RANK) ? MEM_COUNT : 0;

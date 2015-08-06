@@ -1,5 +1,6 @@
 #include "../minunit.h"
 #include <collections/darray.h>
+#include <collections/darray_algos.h>
 #include <util/random.h>
 #include <assert.h>
 #include <stdlib.h>

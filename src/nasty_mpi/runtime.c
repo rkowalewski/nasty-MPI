@@ -11,6 +11,8 @@
 //if the programmer fires 50 times the same mpi operation without a flush, we forward it to the mpi library...
 #define MAX_SIGNATURE_LOOKUP_COUNT 50
 
+int find_by_rank(const void* el, void* args);
+
 static inline int get_origin_rank(MPI_Win win)
 {
   void *rank_attr;
@@ -20,8 +22,9 @@ static inline int get_origin_rank(MPI_Win win)
   return rank;
 }
 
-static inline void _sleep(unsigned int millis)
+static inline void _sleep_milliseconds(unsigned int millis)
 {
+  debug("sleeping for %u ms", millis)
   struct timespec ts;
   ts.tv_sec = millis / 1000;
   ts.tv_nsec = (millis % 1000) * 1000000;
@@ -33,7 +36,6 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
 
   if (op_info == NULL || op_info->is_sent) return MPI_SUCCESS;
   int rc = -1;
-
   if (op_info->type == rma_put)
   {
     debug("--executing actual put---\n"
@@ -47,20 +49,20 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
           "target_datatype: %d\n",
           get_origin_rank(win),
           op_info->data.put.origin_addr, op_info->data.put.origin_count, op_info->data.put.origin_datatype,
-          op_info->data.put.target_rank, op_info->data.put.target_disp, op_info->data.put.target_count, op_info->data.put.target_datatype
+          op_info->target_rank, op_info->data.put.target_disp, op_info->data.put.target_count, op_info->data.put.target_datatype
          );
+
     rc = PMPI_Put(
            op_info->data.put.origin_addr, op_info->data.put.origin_count, op_info->data.put.origin_datatype,
-           op_info->data.put.target_rank, op_info->data.put.target_disp, op_info->data.put.target_count, op_info->data.put.target_datatype,
+           op_info->target_rank, op_info->data.put.target_disp, op_info->data.put.target_count, op_info->data.put.target_datatype,
            win);
 
     if (rc == MPI_SUCCESS && flush) {
-      return PMPI_Win_flush(win, op_info->data.put.target_rank);
+      return PMPI_Win_flush(win, op_info->target_rank);
     }
   }
   else if (op_info->type == rma_get)
   {
-    /*
     debug("--executing actual get---\n"
           "origin_addr: %p\n"
           "origin_count: %d\n"
@@ -70,16 +72,15 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
           "target_count: %d\n"
           "target_datatype: %d\n",
           op_info->data.get.origin_addr, op_info->data.get.origin_count, op_info->data.get.origin_datatype,
-          op_info->data.get.target_rank, op_info->data.get.target_disp, op_info->data.get.target_count, op_info->data.get.target_datatype
+          op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count, op_info->data.get.target_datatype
          );
-    */
     rc = PMPI_Get(
            op_info->data.get.origin_addr, op_info->data.get.origin_count, op_info->data.get.origin_datatype,
-           op_info->data.get.target_rank, op_info->data.get.target_disp, op_info->data.get.target_count, op_info->data.get.target_datatype,
+           op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count, op_info->data.get.target_datatype,
            win);
 
     if (rc == MPI_SUCCESS && flush) {
-      return PMPI_Win_flush(win, op_info->data.get.target_rank);
+      return PMPI_Win_flush(win, op_info->target_rank);
     }
   }
 
@@ -156,24 +157,13 @@ int sort_get_after_put(const void *a, const void *b)
   return 0;
 }
 
-static inline void reorder_ops(DArray arr_ops)
-{
-  Nasty_mpi_config config = get_nasty_mpi_config();
-  if (config.order == random_order)
-    DArray_shuffle(arr_ops);
-  else if (config.order == put_after_get)
-    DArray_sort(arr_ops, sort_put_after_get);
-  else if (config.order == get_after_put)
-    DArray_sort(arr_ops, sort_get_after_put);
-}
-
-static inline int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
+static int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
 {
   DArray arr_ops = nasty_win_get_mpi_ops(win);
 
   if (!arr_ops) return 0;
 
-  Nasty_mpi_op_signature_t signature = {.lookup_count = 0};
+  Nasty_mpi_op_signature_t signature;
   Nasty_mpi_op_signature(op, &signature);
   size_t i;
   for (i = 0; i < (size_t) arr_ops->size; i++) {
@@ -204,6 +194,7 @@ static inline int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
 
   op_info->type = op->type;
   op_info->data = op->data;
+  op_info->target_rank = op->target_rank;
   op_info->signature = signature;
   op_info->is_sent = 0;
 
@@ -217,16 +208,74 @@ static inline int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
   return 0;
 }
 
-int filter_by_rank(void* el, void* args)
+int group_by_rank(const void *el)
+{
+  Nasty_mpi_op *op = (Nasty_mpi_op *) el;
+  if (!op) return -1;
+  return op->target_rank;
+}
+
+int group_by_type(const void *el)
+{
+  Nasty_mpi_op *op = (Nasty_mpi_op *) el;
+  if (!op) return -1;
+  return op->type;
+}
+
+static inline DArray reorder_ops(DArray arr_ops, Submit_order order)
+{
+  //continue with test if there are different types
+  if (order == random_order) {
+    DArray_shuffle(arr_ops);
+  }
+  else if (order == put_after_get || order == get_after_put) {
+    DArray grouped_by_type = DArray_group_by(arr_ops, group_by_type);
+
+    DArray puts = DArray_get(grouped_by_type, rma_put);
+    DArray_shuffle(puts);
+    DArray gets = DArray_get(grouped_by_type, rma_get);
+    DArray_shuffle(gets);
+
+    if (order == put_after_get) {
+      DArray_push_all(arr_ops, gets);
+      DArray_push_all(arr_ops, puts);
+    } else {
+      DArray_push_all(arr_ops, puts);
+      DArray_push_all(arr_ops, gets);
+    }
+
+    DArray_destroy(puts);
+    DArray_destroy(gets);
+    DArray_destroy(grouped_by_type);
+  }
+
+  return arr_ops;
+}
+
+
+
+static DArray group_ops(DArray all_ops, int rank)
+{
+  if (rank != EXECUTE_OPS_OF_ANY_RANK) {
+    DArray groups = DArray_create(sizeof(DArray), 2);
+    DArray ops_of_rank = DArray_find(all_ops, find_by_rank, &rank);
+    DArray_remove_all(all_ops, ops_of_rank);
+    DArray_push(groups, ops_of_rank) ;
+
+    //filter by rank
+    return groups;
+  }
+
+  return DArray_group_by(all_ops, group_by_rank);
+}
+
+int find_by_rank(const void* el, void* args)
 {
   if (!el || !args) return 0;
 
   int rank = * (int*) args;
   Nasty_mpi_op *op = (Nasty_mpi_op *) el;
-  if (op->type == rma_put)
-    return op->data.put.target_rank == rank;
-  else if (op->type == rma_get)
-    return op->data.get.target_rank == rank;
+  return op->target_rank == rank;
 
   return 0;
 }
@@ -234,6 +283,7 @@ int filter_by_rank(void* el, void* args)
 int nasty_mpi_handle_op(MPI_Win win, Nasty_mpi_op *op)
 {
   int res = 0;
+  //int origin_rank = get_origin_rank(win);
   if (op == NULL) return res;
 
   Nasty_mpi_config config = get_nasty_mpi_config();
@@ -241,60 +291,99 @@ int nasty_mpi_handle_op(MPI_Win win, Nasty_mpi_op *op)
   Submit_time submit_time = config.time;
 
   if (submit_time == random_choice) {
-    submit_time = random_seq() % 3;
+    //make random choice between maximum_delay or fire_immediate
+    submit_time = random_seq() % 2;
   }
 
   if (submit_time == maximum_delay) {
     res = cache_rma_call(win, op);
   } else {
-    bool flush = submit_time == fire_and_sync;
-    res = invoke_mpi(win, op, flush);
+    //bool flush = submit_time == fire_and_sync;
+    //Case: fire_immediate
+    Nasty_mpi_op *op_info = malloc(sizeof(Nasty_mpi_op));
+    if (!op_info) return -1;
+    op_info->data = op->data;
+    op_info->type = op->type;
+    op_info->is_sent = 0;
+    op_info->target_rank = op->target_rank;
+    res = invoke_mpi(win, op_info, false);
+    free(op_info);
   }
 
   return (res == 0)  ? MPI_SUCCESS : res;
 }
-
-
-int nasty_mpi_execute_cached_calls(MPI_Win win, int rank)
+/*
+static void _dumpArray(DArray arr)
 {
+  for (size_t i = 0; i < (size_t) DArray_count(arr); i++) {
+    void *item = DArray_get(arr, i);
+    if (item)
+      debug("index: %zu, item: %p", i, item);
+  }
+}
+*/
+
+int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank)
+{
+  //int origin_rank = get_origin_rank(win);
   DArray all_ops = nasty_win_get_mpi_ops(win);
-  if (!all_ops || all_ops->size == 0) return MPI_SUCCESS;
+
+  if (DArray_is_empty(all_ops)) return MPI_SUCCESS;
 
   //filter all operations by target rank
-  DArray ops_to_process = (rank != EXECUTE_OPS_OF_ANY_RANK) ? DArray_filter(all_ops, filter_by_rank, &rank) : all_ops;
+  DArray grouped_by_rank = group_ops(all_ops, target_rank);
+
+  if (DArray_is_empty(grouped_by_rank)) {
+    DArray_destroy(grouped_by_rank);
+    return MPI_SUCCESS;
+  }
 
   Nasty_mpi_config config = get_nasty_mpi_config();
 
-  //split MPI_Put and MPI_Get operations
-  if (config.split_rma_ops)
-    split_ops(ops_to_process);
-
-  //reorder operations
-  reorder_ops(ops_to_process);
-
-  //execute all operations
-  size_t i;
   int res = MPI_SUCCESS;
-  for (i = 0; i < (size_t) ops_to_process->size; i++)
-  {
-    Nasty_mpi_op *op_info = DArray_get(ops_to_process, i);
-    //add some latency by sleep for a random number of milliseconds (between 0 and 1500)
-    if (op_info) _sleep(random_seq() % 1500);
 
-    res = invoke_mpi(win, op_info, false);
+  while (DArray_count(grouped_by_rank) > 0) {
+    DArray ops = DArray_pop(grouped_by_rank);
 
-    if (res != MPI_SUCCESS) {
-      debug("rank %d could not execute all intercepted mpi rma calls", get_origin_rank(win));
+
+    if (DArray_is_empty(ops)) {
+      DArray_destroy(ops);
+      continue;
     }
+
+    //split MPI_Put and MPI_Get operations
+    if (config.split_rma_ops)
+      split_ops(ops);
+
+    if (config.order != program_order)
+      reorder_ops(ops, config.order);
+
+    //execute all operations
+    size_t count = (size_t) DArray_count(ops);
+
+    for (size_t i = 0; i < count; i++)
+    {
+      Nasty_mpi_op *op_info = DArray_remove(ops, i);
+
+      if (!op_info) continue;
+      //add some latency by sleep for a random number of milliseconds (between 0 and 1500)
+      if (count > 1)
+        _sleep_milliseconds(random_seq() % 1103);
+
+      res = invoke_mpi(win, op_info, false);
+
+      if (res != MPI_SUCCESS) {
+        return res;
+        debug("rank %d could not execute all intercepted mpi rma calls", get_origin_rank(win));
+      }
+
+      DArray_free(op_info);
+    }
+
+    DArray_destroy(ops);
   }
 
-  //cleanup executed operations
-  if (ops_to_process != all_ops) {
-    DArray_remove_all(all_ops, ops_to_process);
-    DArray_clear_destroy(ops_to_process);
-  } else {
-    DArray_clear(all_ops);
-  }
+  DArray_destroy(grouped_by_rank);
 
   return res;
 }

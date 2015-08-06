@@ -3,7 +3,6 @@
 #include <collections/darray.h>
 #include <util/random.h>
 #include <assert.h>
-#include <stddef.h>
 #include <stdio.h>
 
 DArray DArray_create(size_t element_size, size_t initial_capacity)
@@ -114,25 +113,9 @@ void *DArray_pop(DArray array)
   return el;
 }
 
-static inline void swap(void **src, void **dst, size_t i, size_t j)
-{
-  if (src == dst)
-  {
-    void *tmp;
-    tmp = dst[i];
-    dst[i] = dst[j];
-    dst[j] = tmp;
-  }
-  else
-  {
-    dst[i] = src[j];
-    dst[j] = src[i];
-  }
-}
-
 void DArray_remove_all(DArray array, DArray to_remove)
 {
-  if (!to_remove || !array) return;
+  if (!to_remove || !array || !(array->element_size == to_remove->element_size)) return;
 
   for (size_t i = 0; i < (size_t) to_remove->size; i++)
   {
@@ -144,41 +127,6 @@ void DArray_remove_all(DArray array, DArray to_remove)
   }
 }
 
-void DArray_shuffle(DArray array)
-{
-  if (!array || !array->size) return;
-
-  size_t i, j;
-
-  if (array->size == 2) {
-    i = (size_t) (random_seq() % 2);
-    j = 1 - i;
-    swap(array->contents, array->contents, i, j);
-  } else {
-    for (j = array->size - 1; j > 1; j--)
-    {
-      i = (random_seq() % j) + 1;
-      swap(array->contents, array->contents, i - 1, j - 1);
-    }
-  }
-}
-
-
-DArray DArray_filter(DArray array, DArray_filter_fn *filter_fn, void* args)
-{
-  if (DArray_is_empty(array)) return NULL;
-
-  DArray filtered = DArray_create(array->element_size, array->size);
-
-  for (int i = 0; i < DArray_count(array); i++) {
-    void *item = DArray_get(array, i);
-
-    if (filter_fn(item, args))
-      DArray_push(filtered, item);
-  }
-
-  return filtered;
-}
 
 int DArray_push_all(DArray dst, DArray src)
 {
@@ -192,35 +140,14 @@ int DArray_push_all(DArray dst, DArray src)
   return 0;
 }
 
-int DArray_natural_sort(const void *a, const void *b)
+int DArray_ensure_capacity(DArray array, int minCapacity)
 {
-  const void *elementA = * (void **) a;
-  const void *elementB = * (void **) b;
+  if (!array) return -1;
 
-  if ( !elementA && !elementB)
-    return 0;
-  else if (!elementA)
-    return 1;
-  else if (!elementB)
-    return -1;
+  if (array->capacity < minCapacity)
+    return DArray_resize(array, minCapacity);
 
-  ptrdiff_t diff = (ptrdiff_t) elementA - (ptrdiff_t) elementB;
-
-  if (diff > 0)
-    return 1;
-  else if (diff < 0)
-    return -1;
-  else
-    return 0;
-}
-
-void DArray_sort(DArray array, int(*compar)(const void *, const void *))
-{
-  if (! (array && array->size)) return;
-
-  if (!compar) compar = DArray_natural_sort;
-
-  qsort(array->contents, array->capacity, sizeof(void *), compar);
+  return 0;
 }
 
 /*

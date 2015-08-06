@@ -4,10 +4,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-typedef int (DArray_filter_fn) (void *el, void *args);
-
-typedef int (DArray_sort_fn) (const void *a, const void *b);
-
 typedef struct DArray
 {
   int size;
@@ -39,7 +35,7 @@ void DArray_remove_all(DArray array, DArray to_remove);
 
 int DArray_push_all(DArray dst, DArray src);
 
-DArray DArray_filter(DArray array, DArray_filter_fn *filter_fn, void *args);
+int DArray_ensure_capacity(DArray array, int minCapacity);
 
 #define DArray_last(A) ((A)->contents[(A)->size - 1])
 #define DArray_first(A) ((A)->contents[0])
@@ -91,12 +87,8 @@ static inline void *DArray_new(DArray array)
 
 static inline int DArray_is_empty(DArray array)
 {
-  return (!array || array->size == 0);
+  return (!array || DArray_count(array) == 0);
 }
-
-void DArray_shuffle(DArray array);
-void DArray_sort(DArray array, int(*compar)(const void *, const void *));
-
 
 
 /*

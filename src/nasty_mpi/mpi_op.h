@@ -27,7 +27,6 @@ typedef struct Nasty_mpi_put
   const void *origin_addr;
   int origin_count;
   MPI_Datatype origin_datatype;
-  int target_rank;
   MPI_Aint target_disp;
   int target_count;
   MPI_Datatype target_datatype;
@@ -38,7 +37,6 @@ typedef struct Nasty_mpi_get
   void *origin_addr;
   int origin_count;
   MPI_Datatype origin_datatype;
-  int target_rank;
   MPI_Aint target_disp;
   int target_count;
   MPI_Datatype target_datatype;
@@ -47,6 +45,7 @@ typedef struct Nasty_mpi_get
 typedef struct Nasty_mpi_op
 {
   Nasty_mpi_op_type type;
+  int target_rank;
   union
   {
     Nasty_mpi_put put;

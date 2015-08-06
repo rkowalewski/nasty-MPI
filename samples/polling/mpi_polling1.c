@@ -20,10 +20,6 @@ int main(int argc, char** argv)
 
   MPI_Init(&argc, &argv);
 
-  char processor_name[MPI_MAX_PROCESSOR_NAME];
-  int name_len;
-  MPI_Get_processor_name(processor_name, &name_len);
-
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   
   local_size = (myrank == MEM_RANK) ? MEM_COUNT : 0;
@@ -43,11 +39,10 @@ int main(int argc, char** argv)
   if (myrank == SENDER) {
     int payload = 42;
     int flag = 1;
-
     MPI_Put( &payload, 1, MPI_INT, MEM_RANK, disp_payload, 1, MPI_INT, win);
     //Flush 1
     MPI_Win_flush(MEM_RANK, win);
-    
+
     MPI_Put( &flag, 1, MPI_INT, MEM_RANK, disp_guard, 1, MPI_INT, win);
     //Flush 2
     MPI_Win_flush(MEM_RANK, win);
@@ -69,6 +64,7 @@ int main(int argc, char** argv)
   }
 
   MPI_Win_unlock_all(win);
+
   MPI_Barrier(MPI_COMM_WORLD);
 
   MPI_Win_free(&win);

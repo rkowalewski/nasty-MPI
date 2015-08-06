@@ -7,8 +7,8 @@ typedef enum
 {
   maximum_delay,
   fire_immediate,
-  fire_and_sync,
   random_choice,
+  //fire_and_sync,
 } Submit_time;
 
 typedef enum
@@ -27,7 +27,7 @@ typedef struct Nasty_mpi_config
   Submit_order order;
   //Split RMA Operations with basic Datatypes
   bool split_rma_ops;
-  bool sync_all_ops;
+  //bool sync_all_ops;
 } Nasty_mpi_config;
 
 int nasty_mpi_init(int *argc, char ***argv);

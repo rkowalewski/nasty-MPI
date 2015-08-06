@@ -13,7 +13,6 @@ static Nasty_mpi_config config = {
   .time = maximum_delay,
   .order = random_order,
   .split_rma_ops = true,
-  .sync_all_ops = false,
 };
 
 static bool _isInitialized = false;
@@ -23,12 +22,15 @@ static inline void load_config(void)
   char* val = getenv("SUBMIT_TIME");
 
   if (val) {
+    debug("env submit_time is: %s", val);
     if (strcmp(val, "fire_immediate") == 0) {
       config.time = fire_immediate;
-    } else if (strcmp(val, "fire_and_sync")) {
+    } 
+    /*else if (strcmp(val, "fire_and_sync")) {
       config.time = fire_immediate;
       config.sync_all_ops = true;
-    } else if (strcmp(val, "random_choice")) {
+    }*/
+    else if (strcmp(val, "random_choice") == 0) {
       config.time = random_choice;
     }
   }
@@ -36,22 +38,23 @@ static inline void load_config(void)
   val = getenv("SUBMIT_ORDER");
 
   if (val) {
+    debug("env submit_order is: %s", val);
     if (strcmp(val, "program_order") == 0) {
       config.order = program_order;
-    } else if (strcmp(val, "put_after_get")) {
+    } else if (strcmp(val, "put_after_get") == 0) {
       config.order = put_after_get;
-    } else if (strcmp(val, "get_after_put")) {
+    } else if (strcmp(val, "get_after_put") == 0) {
       config.order = get_after_put;
     }
   }
 }
-
 
 int nasty_mpi_init(int *argc, char ***argv)
 {
   (void) argc;
   (void) argv;
   if (_isInitialized) return -1;
+  _isInitialized = true;
   int size, rank;
   //initialize PRNG
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -60,7 +63,6 @@ int nasty_mpi_init(int *argc, char ***argv)
   random_init(seed, seed + 1);
   win_storage_init();
   load_config();
-  _isInitialized = true;
   return 0;
 }
 
