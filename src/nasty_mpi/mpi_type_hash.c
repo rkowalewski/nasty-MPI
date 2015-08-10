@@ -93,8 +93,7 @@ unsigned int MPI_type_basic_value(MPI_Datatype type)
     return 0x201;
 
   else {
-    debug( "MPI_type_basic_value()) "
-             "Unknown basic MPI datatype %x", type );
+    debug( "%s: Unknown basic MPI datatype", "MPI_type_basic_value()");
     return 0;
   }
 }
@@ -137,8 +136,7 @@ unsigned int MPI_type_basic_count(MPI_Datatype type)
   else if (    type == MPI_PACKED) return 1;
 
   else {
-    debug( "MPI_type_basic_count(): "
-             "Unknown basic MPI datatype %x", type );
+    debug( "%s: Unknown basic MPI datatype", "MPI_type_basic_count()");
     return 0;
   }
 }

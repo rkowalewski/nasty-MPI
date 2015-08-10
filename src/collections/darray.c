@@ -9,7 +9,7 @@ DArray DArray_create(size_t element_size, size_t initial_capacity)
 {
   DArray array;
 
-  if (!initial_capacity > 0 || !(array = malloc(sizeof(struct DArray)))) return NULL;
+  if (!(initial_capacity > 0) || !(array = malloc(sizeof(struct DArray)))) return NULL;
   array->capacity = initial_capacity;
 
   if (!(array->contents = calloc(initial_capacity, sizeof(void *)))) return NULL;

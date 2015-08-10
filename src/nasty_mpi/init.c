@@ -22,7 +22,6 @@ static inline void load_config(void)
   char* val = getenv("SUBMIT_TIME");
 
   if (val) {
-    debug("env submit_time is: %s", val);
     if (strcmp(val, "fire_immediate") == 0) {
       config.time = fire_immediate;
     } 
@@ -38,7 +37,6 @@ static inline void load_config(void)
   val = getenv("SUBMIT_ORDER");
 
   if (val) {
-    debug("env submit_order is: %s", val);
     if (strcmp(val, "program_order") == 0) {
       config.order = program_order;
     } else if (strcmp(val, "put_after_get") == 0) {

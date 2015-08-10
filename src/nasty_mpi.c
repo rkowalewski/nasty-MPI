@@ -61,6 +61,7 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
             int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
             MPI_Win win)
 {
+  /*
   debug("--caching put---\n"
         "origin_addr: %p\n"
         "origin_count: %d\n"
@@ -72,6 +73,7 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datat
         origin_addr, origin_count, origin_datatype,
         target_rank, target_disp, target_count, target_datatype
        );
+  */
   Nasty_mpi_op op_info;
   op_info.type = rma_put;
   op_info.target_rank = target_rank;
@@ -91,6 +93,7 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
             int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
             MPI_Win win)
 {
+  /*
   debug("--caching get---\n"
         "origin_addr: %p\n"
         "origin_count: %d\n"
@@ -102,6 +105,7 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
         origin_addr, origin_count, origin_datatype,
         target_rank, target_disp, target_count, target_datatype
        );
+  */
   Nasty_mpi_op op_info;
   op_info.type = rma_get;
   op_info.target_rank = target_rank;

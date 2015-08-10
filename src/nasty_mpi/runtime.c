@@ -38,6 +38,7 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
   int rc = -1;
   if (op_info->type == rma_put)
   {
+    /*
     debug("--executing actual put---\n"
           "origin_rank: %d\n"
           "origin_addr: %p\n"
@@ -51,6 +52,7 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
           op_info->data.put.origin_addr, op_info->data.put.origin_count, op_info->data.put.origin_datatype,
           op_info->target_rank, op_info->data.put.target_disp, op_info->data.put.target_count, op_info->data.put.target_datatype
          );
+    */
 
     rc = PMPI_Put(
            op_info->data.put.origin_addr, op_info->data.put.origin_count, op_info->data.put.origin_datatype,
@@ -58,11 +60,12 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
            win);
 
     if (rc == MPI_SUCCESS && flush) {
-      return PMPI_Win_flush(win, op_info->target_rank);
+      return PMPI_Win_flush(op_info->target_rank, win);
     }
   }
   else if (op_info->type == rma_get)
   {
+    /*
     debug("--executing actual get---\n"
           "origin_addr: %p\n"
           "origin_count: %d\n"
@@ -74,13 +77,14 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
           op_info->data.get.origin_addr, op_info->data.get.origin_count, op_info->data.get.origin_datatype,
           op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count, op_info->data.get.target_datatype
          );
+         */
     rc = PMPI_Get(
            op_info->data.get.origin_addr, op_info->data.get.origin_count, op_info->data.get.origin_datatype,
            op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count, op_info->data.get.target_datatype,
            win);
 
     if (rc == MPI_SUCCESS && flush) {
-      return PMPI_Win_flush(win, op_info->target_rank);
+      return PMPI_Win_flush(op_info->target_rank, win);
     }
   }
 
@@ -170,7 +174,7 @@ static int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
     Nasty_mpi_op *cached_op = DArray_get(arr_ops, i);
     if (cached_op && Nasty_mpi_op_signature_equal(&signature, &cached_op->signature)) {
       if (++cached_op->signature.lookup_count == MAX_SIGNATURE_LOOKUP_COUNT) {
-        char type_str[MAX_OP_TYPE_STRLEN];
+        char type_str[MAX_OP_TYPE_STRLEN + 1];
         Nasty_mpi_op_type_str(cached_op, type_str);
 
         debug("The same %s operation has been fired already %d times without any synchronization action!\n", type_str, cached_op->signature.lookup_count);

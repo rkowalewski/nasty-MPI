@@ -9,7 +9,7 @@ KVstore kvs_create(size_t initial_capacity, size_t expand_rate)
 {
   KVstore kvs;
 
-  if (!initial_capacity > 0 || !(kvs = malloc(sizeof(struct KVstore)))) return NULL;
+  if (!(initial_capacity > 0) || !(kvs = malloc(sizeof(struct KVstore)))) return NULL;
   kvs->capacity = initial_capacity;
 
   if (!(kvs->pairs = calloc(initial_capacity, sizeof(KVentry)))) return NULL;

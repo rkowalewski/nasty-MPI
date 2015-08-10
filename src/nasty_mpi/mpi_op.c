@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 static size_t hash(size_t val)
 {
@@ -82,13 +83,12 @@ int Nasty_mpi_op_is_divisible(Nasty_mpi_op *op)
 void Nasty_mpi_op_type_str(Nasty_mpi_op *op, char* str)
 {
   assert(str);
-
   if (op->type == rma_put)
-    (void)strncpy(str, "MPI_Put", sizeof(str));
+    snprintf(str, MAX_OP_TYPE_STRLEN + 1, "%s", "MPI_Put");
   else if (op->type == rma_get)
-    (void)strncpy(str, "MPI_Get", sizeof(str));
+    snprintf(str, MAX_OP_TYPE_STRLEN + 1, "%s", "MPI_Get");
   else
-    (void)strncpy(str, "undefined", sizeof(str));
+    snprintf(str, MAX_OP_TYPE_STRLEN + 1, "%s", "undefined");
 }
 
 DArray Nasty_mpi_op_divide(Nasty_mpi_op *op_info)
