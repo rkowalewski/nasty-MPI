@@ -26,6 +26,8 @@ int main(int argc, char** argv)
     for (size_t i = 3; i < COUNT; i++)
       baseptr[i] = i*99;
 
+  MPI_Barrier(MPI_COMM_WORLD);
+
   MPI_Win_lock_all(0, win);
 
   if (myrank == 0) {
