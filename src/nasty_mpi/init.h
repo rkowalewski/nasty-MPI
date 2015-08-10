@@ -27,6 +27,7 @@ typedef struct Nasty_mpi_config
   Submit_order order;
   //Split RMA Operations with basic Datatypes
   bool split_rma_ops;
+  bool mpich_asynch_progress;
   //bool sync_all_ops;
 } Nasty_mpi_config;
 

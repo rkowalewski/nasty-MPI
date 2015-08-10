@@ -13,6 +13,7 @@ static Nasty_mpi_config config = {
   .time = maximum_delay,
   .order = random_order,
   .split_rma_ops = true,
+  .mpich_asynch_progress = false,
 };
 
 static bool _isInitialized = false;
@@ -44,6 +45,12 @@ static inline void load_config(void)
     } else if (strcmp(val, "get_after_put") == 0) {
       config.order = get_after_put;
     }
+  }
+
+  val = getenv("MPICH_ASYNCH_PROGRESS");
+
+  if (val && strcmp(val, "1") == 0) {
+    config.mpich_asynch_progress = true;
   }
 }
 

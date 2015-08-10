@@ -11,8 +11,6 @@
 //if the programmer fires 50 times the same mpi operation without a flush, we forward it to the mpi library...
 #define MAX_SIGNATURE_LOOKUP_COUNT 50
 
-int find_by_rank(const void* el, void* args);
-
 static inline int get_origin_rank(MPI_Win win)
 {
   void *rank_attr;
@@ -122,43 +120,13 @@ static inline int sort_null_values(const void* a, const void *b)
   return -2;
 }
 
-
-int sort_put_after_get(const void *a, const void *b)
+int find_op_by_signature(const void* el, void* args)
 {
-  Nasty_mpi_op *elementA = * (void **) a;
-  Nasty_mpi_op *elementB = * (void **) b;
+  if (!el || !args) return 0;
 
-  int null_sort = sort_null_values(elementA, elementB);
+  Nasty_mpi_op_signature_t *signature = (Nasty_mpi_op_signature_t *) args;
 
-  if (null_sort != -2) return null_sort;
-
-  if (elementA->type == elementB->type)
-    return 0;
-  else if (elementA->type == rma_get && elementB->type == rma_put)
-    return -1;
-  else if (elementA->type == rma_put && elementB->type == rma_get)
-    return 1;
-
-  return 0;
-}
-
-int sort_get_after_put(const void *a, const void *b)
-{
-  Nasty_mpi_op *elementA = * (void **) a;
-  Nasty_mpi_op *elementB = * (void **) b;
-
-  int null_sort = sort_null_values(elementA, elementB);
-
-  if (null_sort != -2) return null_sort;
-
-  if (elementA->type == elementB->type)
-    return 0;
-  else if (elementA->type == rma_get && elementB->type == rma_put)
-    return 1;
-  else if (elementA->type == rma_put && elementB->type == rma_get)
-    return -1;
-
-  return 0;
+  return Nasty_mpi_op_signature_equal(&((Nasty_mpi_op *) el)->signature, signature);
 }
 
 static int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
@@ -169,27 +137,28 @@ static int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
 
   Nasty_mpi_op_signature_t signature;
   Nasty_mpi_op_signature(op, &signature);
-  size_t i;
-  for (i = 0; i < (size_t) arr_ops->size; i++) {
-    Nasty_mpi_op *cached_op = DArray_get(arr_ops, i);
-    if (cached_op && Nasty_mpi_op_signature_equal(&signature, &cached_op->signature)) {
-      if (++cached_op->signature.lookup_count == MAX_SIGNATURE_LOOKUP_COUNT) {
-        char type_str[MAX_OP_TYPE_STRLEN + 1];
-        Nasty_mpi_op_type_str(cached_op, type_str);
+  DArray found_by_signature = DArray_find(arr_ops, find_op_by_signature, &signature);
 
-        debug("The same %s operation has been fired already %d times without any synchronization action!\n", type_str, cached_op->signature.lookup_count);
-        //DArray_remove(arr_ops, i);
-        /*
-        if (!cached_op->is_sent) {
-          int rc = invoke_mpi(win, cached_op, false);
-          cached_op->is_sent = 1;
-          return rc;
-        }
-        */
-        //DArray_free(cached_op);
+  if (!(DArray_is_empty(found_by_signature))) {
+    Nasty_mpi_op *cached_op = DArray_get(found_by_signature, 0);
+    int rc = 0;
+    if (++cached_op->signature.lookup_count == MAX_SIGNATURE_LOOKUP_COUNT) {
+#ifndef NDEBUG
+      char type_str[MAX_OP_TYPE_STRLEN + 1];
+      Nasty_mpi_op_type_str(cached_op, type_str);
+
+      debug("The same %s operation has been fired already %d times without any synchronization action!\n", type_str, cached_op->signature.lookup_count);
+#endif
+      Nasty_mpi_config config = get_nasty_mpi_config();
+
+      if (config.mpich_asynch_progress) {
+        rc = invoke_mpi(win, cached_op, false);
+        DArray_remove_all(arr_ops, found_by_signature);
+        DArray_clear(found_by_signature);
       }
-      return 0;
     }
+    DArray_destroy(found_by_signature);
+    return rc;
   }
 
   Nasty_mpi_op *op_info = DArray_new(arr_ops);
@@ -212,14 +181,14 @@ static int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
   return 0;
 }
 
-int group_by_rank(const void *el)
+int group_ops_by_rank(const void *el)
 {
   Nasty_mpi_op *op = (Nasty_mpi_op *) el;
   if (!op) return -1;
   return op->target_rank;
 }
 
-int group_by_type(const void *el)
+int group_ops_by_type(const void *el)
 {
   Nasty_mpi_op *op = (Nasty_mpi_op *) el;
   if (!op) return -1;
@@ -233,7 +202,7 @@ static inline DArray reorder_ops(DArray arr_ops, Submit_order order)
     DArray_shuffle(arr_ops);
   }
   else if (order == put_after_get || order == get_after_put) {
-    DArray grouped_by_type = DArray_group_by(arr_ops, group_by_type);
+    DArray grouped_by_type = DArray_group_by(arr_ops, group_ops_by_type);
 
     DArray puts = DArray_get(grouped_by_type, rma_put);
     DArray_shuffle(puts);
@@ -256,24 +225,7 @@ static inline DArray reorder_ops(DArray arr_ops, Submit_order order)
   return arr_ops;
 }
 
-
-
-static DArray group_ops(DArray all_ops, int rank)
-{
-  if (rank != EXECUTE_OPS_OF_ANY_RANK) {
-    DArray groups = DArray_create(sizeof(DArray), 2);
-    DArray ops_of_rank = DArray_find(all_ops, find_by_rank, &rank);
-    DArray_remove_all(all_ops, ops_of_rank);
-    DArray_push(groups, ops_of_rank) ;
-
-    //filter by rank
-    return groups;
-  }
-
-  return DArray_group_by(all_ops, group_by_rank);
-}
-
-int find_by_rank(const void* el, void* args)
+int find_ops_by_rank(const void* el, void* args)
 {
   if (!el || !args) return 0;
 
@@ -282,6 +234,21 @@ int find_by_rank(const void* el, void* args)
   return op->target_rank == rank;
 
   return 0;
+}
+
+static DArray group_ops(DArray all_ops, int rank)
+{
+  if (rank != EXECUTE_OPS_OF_ANY_RANK) {
+    DArray groups = DArray_create(sizeof(DArray), 1);
+    DArray ops_of_rank = DArray_find(all_ops, find_ops_by_rank, &rank);
+    DArray_set(groups, 0, ops_of_rank) ;
+    DArray_remove_all(all_ops, ops_of_rank);
+
+    //filter by rank
+    return groups;
+  }
+
+  return DArray_group_by(all_ops, group_ops_by_rank);
 }
 
 int nasty_mpi_handle_op(MPI_Win win, Nasty_mpi_op *op)

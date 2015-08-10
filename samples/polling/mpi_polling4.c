@@ -52,7 +52,6 @@ int main(int argc, char** argv)
     int guard = 0, value;
     while (!guard)
     {
-    //nanosleep(&ts, NULL);
       MPI_Get(&guard, 1, MPI_INT, MEM_RANK, disp_guard, 1, MPI_INT, win);
       //Flush 3
       MPI_Win_flush(MEM_RANK, win);
