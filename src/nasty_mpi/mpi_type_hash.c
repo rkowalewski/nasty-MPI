@@ -11,17 +11,17 @@ unsigned int MPI_type_cirleftshift( unsigned int alpha, unsigned n )
 {
   /* Doing circular left shift of alpha by n bits */
   unsigned int t1, t2;
-  t1 = alpha >> (sizeof(unsigned int)-n);
+  t1 = alpha >> (sizeof(unsigned int) - n);
   t2 = alpha << n;
   return t1 | t2;
 }
 
 void MPI_type_hash_add(const MPI_type_hash_t *alpha,
-                      const MPI_type_hash_t *beta,
-                      MPI_type_hash_t *lamda);
+                       const MPI_type_hash_t *beta,
+                       MPI_type_hash_t *lamda);
 void MPI_type_hash_add(const MPI_type_hash_t *alpha,
-                      const MPI_type_hash_t *beta,
-                      MPI_type_hash_t *lamda)
+                       const MPI_type_hash_t *beta,
+                       MPI_type_hash_t *lamda)
 {
   lamda->value = (alpha->value)
                  ^ MPI_type_cirleftshift(beta->value, alpha->count);
@@ -29,7 +29,7 @@ void MPI_type_hash_add(const MPI_type_hash_t *alpha,
 }
 
 int MPI_type_hash_equal(const MPI_type_hash_t *alpha,
-                       const MPI_type_hash_t *beta)
+                        const MPI_type_hash_t *beta)
 {
   return alpha->count == beta->count && alpha->value == beta->value;
 }
@@ -41,7 +41,7 @@ unsigned int MPI_type_basic_value(MPI_Datatype type)
      MPI_Datatype's that return 0x0 are as if they are being
      skipped/ignored in the comparison of any 2 MPI_Datatypes.
   */
-  if ( type == MPI_DATATYPE_NULL || type == MPI_UB || type == MPI_LB )
+  if ( type == MPI_DATATYPE_NULL)
     return 0x0;
   else if ( type == MPI_CHAR )
     return 0x1;
@@ -92,7 +92,8 @@ unsigned int MPI_type_basic_value(MPI_Datatype type)
   else if ( type == MPI_PACKED )
     return 0x201;
 
-  else {
+  else
+  {
     debug( "%s: Unknown basic MPI datatype", "MPI_type_basic_value()");
     return 0;
   }
@@ -102,10 +103,7 @@ unsigned int MPI_type_basic_count(MPI_Datatype type);
 unsigned int MPI_type_basic_count(MPI_Datatype type)
 {
   /* MPI_Datatype's that return 0 are being skipped/ignored. */
-  if (    type == MPI_DATATYPE_NULL
-          || type == MPI_UB
-          || type == MPI_LB
-     ) return 0;
+  if (type == MPI_DATATYPE_NULL) return 0;
 
   else if (    type == MPI_CHAR
                || type == MPI_SIGNED_CHAR
@@ -135,7 +133,8 @@ unsigned int MPI_type_basic_count(MPI_Datatype type)
 
   else if (    type == MPI_PACKED) return 1;
 
-  else {
+  else
+  {
     debug( "%s: Unknown basic MPI datatype", "MPI_type_basic_count()");
     return 0;
   }
@@ -147,7 +146,8 @@ int MPI_type_derived_count(int idx, int *ints, int combiner)
 {
   int ii, tot_cnt, dim_A, dim_B;
   tot_cnt = 0;
-  switch(combiner) {
+  switch (combiner)
+  {
   case MPI_COMBINER_DUP :
   case MPI_COMBINER_RESIZED :
     return 1;
@@ -157,27 +157,30 @@ int MPI_type_derived_count(int idx, int *ints, int combiner)
   case MPI_COMBINER_INDEXED_BLOCK :
   case MPI_COMBINER_VECTOR :
   case MPI_COMBINER_HVECTOR :
-    return ints[0]*ints[1];
+    return ints[0] * ints[1];
 
   case MPI_COMBINER_INDEXED :
   case MPI_COMBINER_HINDEXED :
-    for ( ii = ints[0]; ii > 0; ii-- ) {
+    for ( ii = ints[0]; ii > 0; ii-- )
+    {
       tot_cnt += ints[ ii ];
     }
     return tot_cnt;
 
   case MPI_COMBINER_STRUCT :
-    return ints[idx+1];
+    return ints[idx + 1];
 
   case MPI_COMBINER_SUBARRAY :
     dim_A   = ints[ 0 ] + 1;
     dim_B   = 2 * ints[ 0 ];
-    for ( ii=dim_A; ii<=dim_B; ii++ ) {
+    for ( ii = dim_A; ii <= dim_B; ii++ )
+    {
       tot_cnt += ints[ ii ];
     }
     return tot_cnt;
   case MPI_COMBINER_DARRAY :
-    for ( ii=3; ii<=ints[2]+2; ii++ ) {
+    for ( ii = 3; ii <= ints[2] + 2; ii++ )
+    {
       tot_cnt += ints[ ii ];
     }
     return tot_cnt;
@@ -197,7 +200,8 @@ void MPI_type_hash(MPI_Datatype type, int cnt, MPI_type_hash_t *type_hash)
   int             ii;
 
   /*  Don't know if this makes sense or not */
-  if ( cnt <= 0 ) {
+  if ( cnt <= 0 )
+  {
     /* (value,count)=(0,0) => skipping of this (type,cnt) in addition */
     type_hash->value = 0;
     type_hash->count = 0;
@@ -205,7 +209,8 @@ void MPI_type_hash(MPI_Datatype type, int cnt, MPI_type_hash_t *type_hash)
   }
 
   MPI_Type_get_envelope(type, &nints, &naddrs, &ntypes, &combiner);
-  if (combiner != MPI_COMBINER_NAMED) {
+  if (combiner != MPI_COMBINER_NAMED)
+  {
     ints = NULL;
     if ( nints > 0 )
       ints = (int *) malloc(nints * sizeof(int));
@@ -223,7 +228,8 @@ void MPI_type_hash(MPI_Datatype type, int cnt, MPI_type_hash_t *type_hash)
     /*
         ntypes > 1 only for MPI_COMBINER_STRUCT(_INTEGER)
     */
-    for( ii=1; ii < ntypes; ii++) {
+    for ( ii = 1; ii < ntypes; ii++)
+    {
       type_cnt = MPI_type_derived_count(ii, ints, combiner);
       MPI_type_hash(types[ii], type_cnt, &next_hash);
       MPI_type_hash_add(&curr_hash, &next_hash, &curr_hash);
@@ -236,14 +242,16 @@ void MPI_type_hash(MPI_Datatype type, int cnt, MPI_type_hash_t *type_hash)
     if ( types != NULL )
       free( types );
   }
-  else {
+  else
+  {
     curr_hash.value = MPI_type_basic_value(type);
     curr_hash.count = MPI_type_basic_count(type);
   }
 
   type_hash->value = curr_hash.value;
   type_hash->count = curr_hash.count;
-  for ( ii=1; ii < cnt; ii++ ) {
+  for ( ii = 1; ii < cnt; ii++ )
+  {
     MPI_type_hash_add(type_hash, &curr_hash, type_hash);
   }
 }
