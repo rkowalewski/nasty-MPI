@@ -22,7 +22,6 @@ static inline int get_origin_rank(MPI_Win win)
 
 static inline void _sleep_milliseconds(unsigned int millis)
 {
-  debug("sleeping for %u ms", millis)
   struct timespec ts;
   ts.tv_sec = millis / 1000;
   ts.tv_nsec = (millis % 1000) * 1000000;

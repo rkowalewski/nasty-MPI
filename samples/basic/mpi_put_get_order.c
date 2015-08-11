@@ -1,6 +1,6 @@
 #include "../testbench.h"
 
-#define COUNT 2
+#define COUNT 6
 enum {disp_guard = 0, disp_payload = 1};
 void run_rma_test(int nprocs_per_node)
 {
@@ -32,7 +32,7 @@ void run_rma_test(int nprocs_per_node)
 
   MPI_Win_lock_all(0, win);
 
-  if (myrank == 0)
+  if (!myrank)
   {
     int put[3] = {1, 42, 10};
     int get[3];

@@ -7,13 +7,20 @@ tests=()
 submit_times=('maximum_delay' 'fire_immediate')
 submit_orders=('random_order' 'program_order' 'get_after_put' 'put_after_get')
 
+
+if [ -z "${NPROCS}" -o -z "${NPROCS_PER_NODE}" ];
+then
+  echo "usage: $0 <nprocs> <nprocs_per_node>"
+  exit 1
+fi
+
 function run_tests()
 {
   counter=0;
   error=0;
   while [ ${counter} -lt 5 -a ${error} -eq 0 ];
   do
-    mpirun -n 48 ${1} >> samples/tests.log 2>&1;
+    mpirun -n ${NPROCS} ${1} ${NPROCS_PER_NODE} >> samples/tests.log 2>&1;
     error=$?
     counter=$((counter + 1));
   done
