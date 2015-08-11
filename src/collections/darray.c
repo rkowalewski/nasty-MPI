@@ -144,8 +144,11 @@ int DArray_ensure_capacity(DArray array, int minCapacity)
 {
   if (!array) return -1;
 
-  if (array->capacity < minCapacity)
-    return DArray_resize(array, minCapacity);
+  if (array->capacity < minCapacity) {
+    size_t old_capacity = array->capacity;
+    if (DArray_resize(array, minCapacity) == -1) return -1;
+    memset(array->contents + old_capacity, 0, (array->capacity - old_capacity) * sizeof(void *));
+  }
 
   return 0;
 }

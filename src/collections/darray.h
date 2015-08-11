@@ -87,7 +87,7 @@ static inline void *DArray_new(DArray array)
 
 static inline int DArray_is_empty(DArray array)
 {
-  return (!array || DArray_count(array) == 0);
+  return (!array || DArray_count(array) <= 0);
 }
 
 

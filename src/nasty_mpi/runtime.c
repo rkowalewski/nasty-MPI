@@ -57,7 +57,8 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
            op_info->target_rank, op_info->data.put.target_disp, op_info->data.put.target_count, op_info->data.put.target_datatype,
            win);
 
-    if (rc == MPI_SUCCESS && flush) {
+    if (rc == MPI_SUCCESS && flush)
+    {
       return PMPI_Win_flush(op_info->target_rank, win);
     }
   }
@@ -81,7 +82,8 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
            op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count, op_info->data.get.target_datatype,
            win);
 
-    if (rc == MPI_SUCCESS && flush) {
+    if (rc == MPI_SUCCESS && flush)
+    {
       return PMPI_Win_flush(op_info->target_rank, win);
     }
   }
@@ -92,12 +94,14 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
 static inline void split_ops(DArray arr_ops)
 {
   size_t num = (size_t) arr_ops->size;
-  for (size_t i = 0; i < num; i++) {
+  for (size_t i = 0; i < num; i++)
+  {
     Nasty_mpi_op *op_info = DArray_get(arr_ops, i);
 
     DArray divided_ops = Nasty_mpi_op_divide(op_info);
 
-    if (divided_ops) {
+    if (divided_ops)
+    {
       debug("dividing 1 old mpi operation in %d separate operations", DArray_count(divided_ops));
       DArray_push_all(arr_ops, divided_ops);
       //free the old operation
@@ -139,10 +143,12 @@ static int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
   Nasty_mpi_op_signature(op, &signature);
   DArray found_by_signature = DArray_find(arr_ops, find_op_by_signature, &signature);
 
-  if (!(DArray_is_empty(found_by_signature))) {
+  if (!(DArray_is_empty(found_by_signature)))
+  {
     Nasty_mpi_op *cached_op = DArray_get(found_by_signature, 0);
     int rc = 0;
-    if (++cached_op->signature.lookup_count == MAX_SIGNATURE_LOOKUP_COUNT) {
+    if (++cached_op->signature.lookup_count == MAX_SIGNATURE_LOOKUP_COUNT)
+    {
 #ifndef NDEBUG
       char type_str[MAX_OP_TYPE_STRLEN + 1];
       Nasty_mpi_op_type_str(cached_op, type_str);
@@ -151,7 +157,8 @@ static int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
 #endif
       Nasty_mpi_config config = get_nasty_mpi_config();
 
-      if (config.mpich_asynch_progress) {
+      if (config.mpich_asynch_progress)
+      {
         rc = invoke_mpi(win, cached_op, false);
         DArray_remove_all(arr_ops, found_by_signature);
         DArray_clear(found_by_signature);
@@ -173,7 +180,8 @@ static int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
 
   int res = DArray_push(arr_ops, op_info);
 
-  if (res) {
+  if (res)
+  {
     DArray_free(op_info);
     return res;
   }
@@ -198,10 +206,12 @@ int group_ops_by_type(const void *el)
 static inline DArray reorder_ops(DArray arr_ops, Submit_order order)
 {
   //continue with test if there are different types
-  if (order == random_order) {
+  if (order == random_order)
+  {
     DArray_shuffle(arr_ops);
   }
-  else if (order == put_after_get || order == get_after_put) {
+  else if (order == put_after_get || order == get_after_put)
+  {
     DArray grouped_by_type = DArray_group_by(arr_ops, group_ops_by_type);
 
     DArray puts = DArray_get(grouped_by_type, rma_put);
@@ -209,10 +219,13 @@ static inline DArray reorder_ops(DArray arr_ops, Submit_order order)
     DArray gets = DArray_get(grouped_by_type, rma_get);
     DArray_shuffle(gets);
 
-    if (order == put_after_get) {
+    if (order == put_after_get)
+    {
       DArray_push_all(arr_ops, gets);
       DArray_push_all(arr_ops, puts);
-    } else {
+    }
+    else
+    {
       DArray_push_all(arr_ops, puts);
       DArray_push_all(arr_ops, gets);
     }
@@ -238,7 +251,8 @@ int find_ops_by_rank(const void* el, void* args)
 
 static DArray group_ops(DArray all_ops, int rank)
 {
-  if (rank != EXECUTE_OPS_OF_ANY_RANK) {
+  if (rank != EXECUTE_OPS_OF_ANY_RANK)
+  {
     DArray groups = DArray_create(sizeof(DArray), 1);
     DArray ops_of_rank = DArray_find(all_ops, find_ops_by_rank, &rank);
     DArray_set(groups, 0, ops_of_rank) ;
@@ -261,14 +275,18 @@ int nasty_mpi_handle_op(MPI_Win win, Nasty_mpi_op *op)
 
   Submit_time submit_time = config.time;
 
-  if (submit_time == random_choice) {
+  if (submit_time == random_choice)
+  {
     //make random choice between maximum_delay or fire_immediate
     submit_time = random_seq() % 2;
   }
 
-  if (submit_time == maximum_delay) {
+  if (submit_time == maximum_delay)
+  {
     res = cache_rma_call(win, op);
-  } else {
+  }
+  else
+  {
     //bool flush = submit_time == fire_and_sync;
     //Case: fire_immediate
     Nasty_mpi_op *op_info = malloc(sizeof(Nasty_mpi_op));
@@ -304,7 +322,8 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank)
   //filter all operations by target rank
   DArray grouped_by_rank = group_ops(all_ops, target_rank);
 
-  if (DArray_is_empty(grouped_by_rank)) {
+  if (DArray_is_empty(grouped_by_rank))
+  {
     DArray_destroy(grouped_by_rank);
     return MPI_SUCCESS;
   }
@@ -313,11 +332,13 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank)
 
   int res = MPI_SUCCESS;
 
-  while (DArray_count(grouped_by_rank) > 0) {
+  while (!DArray_is_empty(grouped_by_rank))
+  {
     DArray ops = DArray_pop(grouped_by_rank);
 
 
-    if (DArray_is_empty(ops)) {
+    if (DArray_is_empty(ops))
+    {
       DArray_destroy(ops);
       continue;
     }
@@ -341,9 +362,11 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank)
       if (count > 1)
         _sleep_milliseconds(random_seq() % 1103);
 
+
       res = invoke_mpi(win, op_info, false);
 
-      if (res != MPI_SUCCESS) {
+      if (res != MPI_SUCCESS)
+      {
         return res;
         debug("rank %d could not execute all intercepted mpi rma calls", get_origin_rank(win));
       }
