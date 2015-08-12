@@ -22,6 +22,7 @@ static inline int get_origin_rank(MPI_Win win)
 
 static inline void _sleep_milliseconds(unsigned int millis)
 {
+debug("sleeping for %u ms", millis);
   struct timespec ts;
   ts.tv_sec = millis / 1000;
   ts.tv_nsec = (millis % 1000) * 1000000;
@@ -35,21 +36,15 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
   int rc = -1;
   if (op_info->type == rma_put)
   {
-    /*
     debug("--executing actual put---\n"
-          "origin_rank: %d\n"
           "origin_addr: %p\n"
           "origin_count: %d\n"
-          "origin_datatype: %d\n"
           "target_rank: %d\n"
           "target_disp: %td\n"
-          "target_count: %d\n"
-          "target_datatype: %d\n",
-          get_origin_rank(win),
-          op_info->data.put.origin_addr, op_info->data.put.origin_count, op_info->data.put.origin_datatype,
-          op_info->target_rank, op_info->data.put.target_disp, op_info->data.put.target_count, op_info->data.put.target_datatype
+          "target_count: %d\n",
+          op_info->data.put.origin_addr, op_info->data.put.origin_count,
+          op_info->target_rank, op_info->data.put.target_disp, op_info->data.put.target_count
          );
-    */
 
     rc = PMPI_Put(
            op_info->data.put.origin_addr, op_info->data.put.origin_count, op_info->data.put.origin_datatype,
@@ -63,19 +58,15 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
   }
   else if (op_info->type == rma_get)
   {
-    /*
     debug("--executing actual get---\n"
           "origin_addr: %p\n"
           "origin_count: %d\n"
-          "origin_datatype: %d\n"
           "target_rank: %d\n"
           "target_disp: %td\n"
-          "target_count: %d\n"
-          "target_datatype: %d\n",
-          op_info->data.get.origin_addr, op_info->data.get.origin_count, op_info->data.get.origin_datatype,
-          op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count, op_info->data.get.target_datatype
+          "target_count: %d\n",
+          op_info->data.get.origin_addr, op_info->data.get.origin_count, 
+          op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count
          );
-         */
     rc = PMPI_Get(
            op_info->data.get.origin_addr, op_info->data.get.origin_count, op_info->data.get.origin_datatype,
            op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count, op_info->data.get.target_datatype,

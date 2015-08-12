@@ -20,7 +20,8 @@ void run_rma_test(int nprocs_per_node)
     exit(EXIT_FAILURE);
   }
   int mem_rank = nprocs_per_node * 2 + nprocs_per_node / 2;
-  int receiver_rank =  mem_rank - nprocs_per_node;
+  //int receiver_rank =  mem_rank - nprocs_per_node;
+  int receiver_rank = nprocs_per_node / 2;
 
   local_size = (myrank == mem_rank) ? COUNT : 0;
 
@@ -47,7 +48,8 @@ void run_rma_test(int nprocs_per_node)
     //Flush 2
     MPI_Win_flush(mem_rank, win);
 
-  } else if (myrank == receiver_rank) {
+  }
+  if (myrank == receiver_rank) {
     int guard = 0, value;
     while (!guard)
     {
@@ -59,7 +61,9 @@ void run_rma_test(int nprocs_per_node)
     //Flush 4
     MPI_Win_flush(mem_rank, win);
     assert(value == 42);
-  } else if (myrank == mem_rank) {
+  }
+  
+  if (myrank == mem_rank) {
     //do nothing
   }
 

@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 
   if (argc < 2)
   {
-    if (!myrank) printf("usage: ./executable <nprocs_per_node>\n");
+    if (myrank == 0) printf("usage: ./executable <nprocs_per_node>\n");
     MPI_Finalize();
     return EXIT_FAILURE;
   }

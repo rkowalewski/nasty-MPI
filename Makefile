@@ -3,7 +3,7 @@ LIB_NAME=nasty_mpi
 MAJOR=0
 MINOR=1
 
-CFLAGS=-O3 -Wall -std=gnu11  $(OPTFLAGS)
+CFLAGS=-O3 -std=gnu11  $(OPTFLAGS)
 LIBS=$(OPTLIBS)
 PREFIX?=/usr/local
 
@@ -22,10 +22,12 @@ TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 UNAME := $(shell uname -s)
 
 # The Target Build
-all: CFLAGS += -DNDEBUG -Isrc
-all: $(TARGET)
+all: lib samples
 
-dev: CFLAGS += -g -Isrc -Wextra -Werror -pedantic
+lib: CFLAGS += -DNDEBUG -Isrc
+lib: $(TARGET)
+
+dev: CFLAGS += -g -Isrc -Wall -Wextra -Werror -pedantic
 dev: $(TARGET)
 	cd lib; \
 	ln -fs ../$(TARGET) lib$(LIB_NAME).so.$(MAJOR); \
@@ -48,13 +50,12 @@ build:
 .PHONY: tests
 tests: LDLIBS = -l$(LIB_NAME)
 tests: LDFLAGS = -Wl,-rpath,./lib/ -L./lib/
-tests: CFLAGS += -g -Isrc -Wextra -Werror
-tests: all $(TESTS)
+tests: CFLAGS += -g -Isrc -Wall -Wextra -Werror
+tests: lib $(TESTS)
 	sh ./tests/basic_tests.sh
 
 samples: $(SAMPLES)
 
-$(SAMPLES): CFLAGS += -Wextra -Werror
 $(SAMPLES): bin/% : samples/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ samples/testbench.c $<
@@ -65,17 +66,12 @@ clean:
 	rm -f tests/tests.log
 	find . -name "*.gc*" -exec rm {} \;
 	rm -rf `find . -name "*.dSYM" -print`
-
-clean-samples:
 	rm -rf $(SAMPLES)
 	rm -f samples/tests.log
 	rm -rf bin/*
 
-clean-all: clean-lib clean-tests
-
-
 # The Install
-install: all
+install: lib
 	install -d $(DESTDIR)/$(PREFIX)/lib/
 	install $(TARGET) $(DESTDIR)/$(PREFIX)/lib/
 	ldconfig -n  $(DESTDIR)/$(PREFIX)/lib/

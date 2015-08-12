@@ -1,7 +1,6 @@
 #include "darray_algos.h"
 #include <stddef.h>
 #include <util/random.h>
-#include <assert.h>
 
 static inline void swap(void **src, void **dst, size_t i, size_t j)
 {
@@ -93,19 +92,21 @@ DArray DArray_group_by(DArray array, DArray_group_by_fn *group_by_fn)
 
   DArray groups = DArray_create(sizeof(DArray), 5);
   DArray group;
+  int idx;
+  void *el;
 
   size_t count = (size_t) DArray_count(array);
   for (size_t i = 0; i < count; i++) {
-    void *el = DArray_remove(array, i);
+    el = DArray_remove(array, i);
     if (!el) continue;
-    int idx = group_by_fn(el);
+    idx = group_by_fn(el);
     if (idx == -1) continue;
 
     group = DArray_get(groups, idx);
 
     if (!group) {
       group = DArray_create(array->element_size, DArray_count(array) + 1);
-      assert(DArray_ensure_capacity(groups, idx + 1) == 0);
+      DArray_ensure_capacity(groups, idx + 1);
       DArray_set(groups, idx, group);
     }
 
