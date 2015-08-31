@@ -1,5 +1,10 @@
-Potential ideas / concept:
-##########################
+Potential ideas
+################
+- Use PIN to instrument memory accesses (malloc and free) and verify if there is some overlap with message buffers in Put / Get operatoprationss
+- Calculate overlapping memory regions in Put / Get operations (see SyncChecker paper for some inspiration)
+
+Done
+#####
 
 Nasty_win
  - origin rank (store in window as attribute) check
