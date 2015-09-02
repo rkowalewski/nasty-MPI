@@ -1,7 +1,4 @@
-CC=mpicc
-LIB_NAME=nasty_mpi
-MAJOR=0
-MINOR=1
+include Makefile.DEF
 
 CFLAGS=-O3 -std=gnu11  $(OPTFLAGS)
 LIBS=$(OPTLIBS)
