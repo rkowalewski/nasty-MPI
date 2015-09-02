@@ -48,9 +48,9 @@ void run_rma_test(int nprocs_per_node)
     //Flush 2
     MPI_Win_flush(mem_rank, win);
 
-  }
-  if (myrank == receiver_rank) {
-    int guard = 0, value;
+  } else if (myrank == receiver_rank) {
+    int guard = 0;
+    int value;
     while (!guard)
     {
       MPI_Get(&guard, 1, MPI_INT, mem_rank, disp_guard, 1, MPI_INT, win);
