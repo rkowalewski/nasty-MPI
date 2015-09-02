@@ -17,29 +17,26 @@ SAMPLES_SRC=$(wildcard samples/**/*.c)
 SAMPLES=$(patsubst samples/%.c,bin/%,$(SAMPLES_SRC))
 
 LIB_VERSION=$(MAJOR).$(MINOR)
-TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
-
-UNAME := $(shell uname -s)
+TARGET=build/lib$(LIB_NAME).a
+SO_TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 
 # The Target Build
-all: lib samples
-
-lib: CFLAGS += -DNDEBUG -Isrc
-lib: $(TARGET)
+all: CFLAGS += -DNDEBUG -Isrc
+all: $(TARGET) $(SO_TARGET) samples
 
 dev: CFLAGS += -g -Isrc -Wall -Wextra -Werror -pedantic
-dev: $(TARGET)
+dev: $(TARGET) $(SO_TARGET) samples
 	cd lib; \
 	ln -fs ../$(TARGET) lib$(LIB_NAME).so.$(MAJOR); \
 	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so
 
+$(SO_TARGET): $(TARGET) $(OBJECTS)
+	$(CC) -shared -Wl,-soname,lib$(LIB_NAME).so.$(MAJOR) $(OBJECTS) -o $@ -lc
+
 $(TARGET): CFLAGS += -fPIC
 $(TARGET): build $(OBJECTS)
-ifeq ($(UNAME), Darwin)
-	$(CC) -shared -Wl,-install_name,lib$(LIB_NAME).so.$(MAJOR) $(OBJECTS) -o $@ -lc
-else
-	$(CC) -shared -Wl,-soname,lib$(LIB_NAME).so.$(MAJOR) $(OBJECTS) -o $@ -lc
-endif
+	ar rcs $@ $(OBJECTS)
+	ranlib $@
 
 build:
 	@mkdir -p build

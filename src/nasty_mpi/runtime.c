@@ -22,7 +22,7 @@ static inline int get_origin_rank(MPI_Win win)
 
 static inline void _sleep_milliseconds(unsigned int millis)
 {
-debug("sleeping for %u ms", millis);
+  debug("sleeping for %u ms", millis);
   struct timespec ts;
   ts.tv_sec = millis / 1000;
   ts.tv_nsec = (millis % 1000) * 1000000;
@@ -349,8 +349,7 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank)
 
       if (!op_info) continue;
       //add some latency by sleep for a random number of milliseconds (between 0 and 1500)
-      if (count > 1)
-        _sleep_milliseconds(random_seq() % 1103);
+      _sleep_milliseconds(random_seq() % 1103);
 
 
       res = invoke_mpi(win, op_info, false);
