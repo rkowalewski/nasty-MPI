@@ -24,9 +24,10 @@ all: $(TARGET) $(SO_TARGET) samples
 dev: CFLAGS += -g -Isrc -Wall -Wextra -Werror -pedantic
 dev: $(TARGET) $(SO_TARGET) samples
 	cd lib; \
-	ln -fs ../$(TARGET) lib$(LIB_NAME).so.$(MAJOR); \
+	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
 	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so
 
+$(SO_TARGET): BUILD_DYNAMIC=1
 $(SO_TARGET): $(TARGET) $(OBJECTS)
 	$(CC) -shared -Wl,-soname,lib$(LIB_NAME).so.$(MAJOR) $(OBJECTS) -o $@ -lc
 
