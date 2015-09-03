@@ -6,9 +6,9 @@
 #include <collections/darray.h>
 #include <collections/kvs.h>
 #include <macros/logging.h>
-#include <nasty_mpi/win_storage.h>
-#include <nasty_mpi/init.h>
-#include <nasty_mpi/runtime.h>
+#include <nasty_runtime/win_storage.h>
+#include <nasty_runtime/init.h>
+#include <nasty_runtime/runtime.h>
 
 int MPI_Init(int *argc, char ***argv);
 int MPI_Finalize(void);

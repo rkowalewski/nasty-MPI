@@ -3,7 +3,7 @@
 
 #include <mpi.h>
 #include <collections/darray.h>
-#include <nasty_mpi/mpi_op.h>
+#include <nasty_ops/nasty_mpi_op.h>
 
 #define NASTY_ID_LEN 6
 #define NASTY_ID_MAX_INT 1000000

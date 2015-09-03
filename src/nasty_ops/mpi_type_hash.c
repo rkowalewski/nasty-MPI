@@ -2,7 +2,7 @@
    (C) 2004 by Argonne National Laboratory.
        See COPYRIGHT in top-level directory.
 */
-#include <nasty_mpi/mpi_type_hash.h>
+#include <nasty_ops/mpi_type_hash.h>
 #include <stdlib.h>
 #include <macros/logging.h>
 

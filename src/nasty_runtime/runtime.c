@@ -1,12 +1,11 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <nasty_mpi/runtime.h>
-#include <nasty_mpi/init.h>
-#include <nasty_mpi/mpi_op.h>
+#include <time.h>
 #include <macros/logging.h>
 #include <util/random.h>
-#include <time.h>
+#include "runtime.h"
+#include "init.h"
 
 //if the programmer fires 50 times the same mpi operation without a flush, we forward it to the mpi library...
 #define MAX_SIGNATURE_LOOKUP_COUNT 50

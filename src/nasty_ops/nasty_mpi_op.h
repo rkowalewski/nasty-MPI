@@ -1,7 +1,9 @@
 #ifndef __NASTY_MPI_OP_H
 #define __NASTY_MPI_OP_H
 
-#include <nasty_mpi/mpi_type_hash.h>
+#include <nasty_ops/mpi_type_hash.h>
+#include <nasty_ops/nasty_mpi_put.h>
+#include <nasty_ops/nasty_mpi_get.h>
 #include <collections/darray.h>
 #include <stddef.h>
 
@@ -19,28 +21,8 @@ typedef enum
 {
   rma_get,
   rma_put,
+  rma_accumulate,
 } Nasty_mpi_op_type;
-
-
-typedef struct Nasty_mpi_put
-{
-  const void *origin_addr;
-  int origin_count;
-  MPI_Datatype origin_datatype;
-  MPI_Aint target_disp;
-  int target_count;
-  MPI_Datatype target_datatype;
-} Nasty_mpi_put;
-
-typedef struct Nasty_mpi_get
-{
-  void *origin_addr;
-  int origin_count;
-  MPI_Datatype origin_datatype;
-  MPI_Aint target_disp;
-  int target_count;
-  MPI_Datatype target_datatype;
-} Nasty_mpi_get;
 
 typedef struct Nasty_mpi_op
 {

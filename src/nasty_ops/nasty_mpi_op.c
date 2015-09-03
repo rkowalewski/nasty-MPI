@@ -1,4 +1,4 @@
-#include <nasty_mpi/mpi_op.h>
+#include <nasty_ops/nasty_mpi_op.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>

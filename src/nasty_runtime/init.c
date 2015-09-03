@@ -4,10 +4,10 @@
 #include <mpi.h>
 #include <assert.h>
 #include <string.h>
-#include <nasty_mpi/init.h>
-#include <nasty_mpi/win_storage.h>
 #include <macros/logging.h>
 #include <util/random.h>
+#include "init.h"
+#include "win_storage.h"
 
 static Nasty_mpi_config config = {
   .time = maximum_delay,

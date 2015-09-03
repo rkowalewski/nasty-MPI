@@ -1,4 +1,3 @@
-#include <nasty_mpi/win_storage.h>
 #include <collections/kvs.h>
 #include <collections/darray.h>
 #include <macros/logging.h>
@@ -6,6 +5,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include "win_storage.h"
 
 //public
 int KEY_NASTY_ID = MPI_KEYVAL_INVALID;
