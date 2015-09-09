@@ -10,9 +10,11 @@
 #include <nasty_runtime/init.h>
 #include <nasty_runtime/runtime.h>
 
+/* INIT / FINALIZE */
 int MPI_Init(int *argc, char ***argv);
 int MPI_Finalize(void);
 
+/* Communication */
 int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
             int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
             MPI_Win win);
@@ -21,16 +23,20 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
            int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
            MPI_Win win);
 
+/* SYNCHRONIZATION */
 int MPI_Win_lock_all(int assert, MPI_Win win);
 int MPI_Win_unlock_all(MPI_Win win);
-
-int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
-    MPI_Comm comm, void *baseptr, MPI_Win *win);
-
-int MPI_Win_create(void *base, MPI_Aint size, int disp_unit,
-    MPI_Info info, MPI_Comm comm, MPI_Win *win);
-
 int MPI_Win_flush(int rank, MPI_Win win);
 int MPI_Win_flush_local(int rank, MPI_Win win);
+
+/* WINDOW CREATION */
+int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
+    MPI_Comm comm, void *baseptr, MPI_Win *win);
+int MPI_Win_create(void *base, MPI_Aint size, int disp_unit,
+    MPI_Info info, MPI_Comm comm, MPI_Win *win);
+int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
+                                 void *baseptr, MPI_Win *win);
+int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win);
+
 #endif
 

@@ -15,6 +15,7 @@ int MPI_Init(int *argc, char ***argv)
   int result = PMPI_Init(argc, argv);
 
   if (result == MPI_SUCCESS) {
+    debug("calling nasty_mpi_init %d", 0);
     nasty_mpi_init(argc, argv);
   }
 
@@ -46,6 +47,31 @@ int MPI_Win_create(void *base, MPI_Aint size, int disp_unit,
 
   return result;
 
+}
+
+int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
+{
+  int result = PMPI_Win_create_dynamic(info, comm, win);
+
+  if (result == MPI_SUCCESS)
+  {
+    nasty_win_init(*win, comm);
+  }
+
+  return result;
+}
+
+int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
+                                 void *baseptr, MPI_Win *win)
+{
+  int result = PMPI_Win_allocate_shared(size, disp_unit, info, comm, baseptr, win);
+
+  if (result == MPI_SUCCESS)
+  {
+    nasty_win_init(*win, comm);
+  }
+
+  return result;
 }
 
 int MPI_Win_lock_all(int assert, MPI_Win win)
@@ -89,7 +115,6 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
             int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
             MPI_Win win)
 {
-/*
   debug("--caching get---\n"
         "origin_addr: %p\n"
         "origin_count: %d\n"
@@ -99,7 +124,6 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
         origin_addr, origin_count,
         target_rank, target_disp, target_count
        );
-*/
   Nasty_mpi_op op_info;
   op_info.type = rma_get;
   op_info.target_rank = target_rank;
@@ -118,6 +142,7 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
 int MPI_Win_flush(int rank, MPI_Win win)
 {
   //execute all cached calls
+  debug("flush to rank %d", rank);
   nasty_mpi_execute_cached_calls(win, rank);
   return PMPI_Win_flush(rank, win);
 }
@@ -125,6 +150,7 @@ int MPI_Win_flush(int rank, MPI_Win win)
 int MPI_Win_flush_local(int rank, MPI_Win win)
 {
   //execute all cached calls
+  debug("local flush to rank %d", rank);
   nasty_mpi_execute_cached_calls(win, rank);
   return PMPI_Win_flush_local(rank, win);
 }
@@ -133,9 +159,10 @@ int MPI_Win_unlock_all(MPI_Win win)
 {
   //execute all cached calls
   int rc = nasty_mpi_execute_cached_calls(win, EXECUTE_OPS_OF_ANY_RANK);
-  if (rc != MPI_SUCCESS) return rc;
   //unlock nasty window
   nasty_win_unlock(win);
+
+  if (rc != MPI_SUCCESS) return rc;
   //do real unock
   return PMPI_Win_unlock_all(win);
 }
