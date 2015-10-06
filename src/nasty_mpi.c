@@ -83,6 +83,15 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
   return rc;
 }
 
+int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
+{
+  int rc = PMPI_Win_lock(lock_type, rank, assert, win);
+
+  if (rc == MPI_SUCCESS) nasty_win_lock(win);
+
+  return rc;
+}
+
 int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
             int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype,
             MPI_Win win)
@@ -142,23 +151,35 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
 int MPI_Win_flush(int rank, MPI_Win win)
 {
   //execute all cached calls
-  debug("flush to rank %d", rank);
-  nasty_mpi_execute_cached_calls(win, rank);
+  nasty_mpi_execute_cached_calls(win, rank, false);
   return PMPI_Win_flush(rank, win);
+}
+
+int MPI_Win_flush_all(MPI_Win win)
+{
+  //execute all cached calls
+  nasty_mpi_execute_cached_calls(win, EXECUTE_OPS_OF_ANY_RANK, false);
+  return PMPI_Win_flush_all(win);
 }
 
 int MPI_Win_flush_local(int rank, MPI_Win win)
 {
   //execute all cached calls
-  debug("local flush to rank %d", rank);
-  nasty_mpi_execute_cached_calls(win, rank);
+  nasty_mpi_execute_cached_calls(win, rank, false);
   return PMPI_Win_flush_local(rank, win);
+}
+
+int MPI_Win_flush_local_all(MPI_Win win)
+{
+  //execute all cached calls
+  nasty_mpi_execute_cached_calls(win, EXECUTE_OPS_OF_ANY_RANK, false);
+  return PMPI_Win_flush_local_all(win);
 }
 
 int MPI_Win_unlock_all(MPI_Win win)
 {
   //execute all cached calls
-  int rc = nasty_mpi_execute_cached_calls(win, EXECUTE_OPS_OF_ANY_RANK);
+  int rc = nasty_mpi_execute_cached_calls(win, EXECUTE_OPS_OF_ANY_RANK, true);
   //unlock nasty window
   nasty_win_unlock(win);
 
@@ -167,6 +188,17 @@ int MPI_Win_unlock_all(MPI_Win win)
   return PMPI_Win_unlock_all(win);
 }
 
+int MPI_Win_unlock(int rank, MPI_Win win)
+{
+  //execute all cached calls
+  int rc = nasty_mpi_execute_cached_calls(win, rank, true);
+  //unlock nasty window
+  nasty_win_unlock(win);
+
+  if (rc != MPI_SUCCESS) return rc;
+  //do real unock
+  return PMPI_Win_unlock(rank, win);
+}
 
 int MPI_Finalize(void)
 {
