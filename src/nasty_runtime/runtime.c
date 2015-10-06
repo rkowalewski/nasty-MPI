@@ -52,7 +52,12 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
 
     if (rc == MPI_SUCCESS && flush)
     {
-      return PMPI_Win_flush(op_info->target_rank, win);
+      debug("flushing %s","put");
+      bool _flush_local = (random_seq() % 2);
+      if (_flush_local)
+        return PMPI_Win_flush_local(op_info->target_rank, win);
+      else
+        return PMPI_Win_flush(op_info->target_rank, win);
     }
   }
   else if (op_info->type == rma_get)
@@ -73,7 +78,12 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
 
     if (rc == MPI_SUCCESS && flush)
     {
-      return PMPI_Win_flush(op_info->target_rank, win);
+      debug("flushing %s","get");
+      bool _flush_local = (random_seq() % 2);
+      if (_flush_local)
+        return PMPI_Win_flush_local(op_info->target_rank, win);
+      else
+        return PMPI_Win_flush(op_info->target_rank, win);
     }
   }
 
@@ -301,7 +311,7 @@ static void _dumpArray(DArray arr)
 }
 */
 
-int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank)
+int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 {
   //int origin_rank = get_origin_rank(win);
   DArray all_ops = nasty_win_get_mpi_ops(win);
@@ -349,9 +359,9 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank)
       if (!op_info) continue;
       //add some latency by sleep for a random number of milliseconds (between 0 and 1500)
       _sleep_milliseconds(random_seq() % 1103);
+      bool _flush = (mayFlush && (op_info->type == rma_put)) ? random_seq() % 2 : 0;
 
-
-      res = invoke_mpi(win, op_info, false);
+      res = invoke_mpi(win, op_info, _flush);
 
       if (res != MPI_SUCCESS)
       {

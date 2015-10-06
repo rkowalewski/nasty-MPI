@@ -24,10 +24,14 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
            MPI_Win win);
 
 /* SYNCHRONIZATION */
+int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win);
+int MPI_Win_unlock(int rank, MPI_Win win);
 int MPI_Win_lock_all(int assert, MPI_Win win);
 int MPI_Win_unlock_all(MPI_Win win);
 int MPI_Win_flush(int rank, MPI_Win win);
+int MPI_Win_flush_all(MPI_Win win);
 int MPI_Win_flush_local(int rank, MPI_Win win);
+int MPI_Win_flush_local_all(MPI_Win win);
 
 /* WINDOW CREATION */
 int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
