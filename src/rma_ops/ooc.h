@@ -23,7 +23,9 @@
  * Calculates offset of member inside the struct
  */
 #ifndef offsetof //is usually defined in stddef.h
+
 #define offsetof(_struct_, _member_) (size_t)&(((_struct_ *)0)->_member_)
+
 #endif
 
 //#define OOC_OFFSETOF(_struct_, _member_) offsetof(_struct, _member_)
