@@ -84,13 +84,13 @@ char * all_tests()
   mu_suite_start();
 
   //is necessary for mpi_type_get_envelope
-  MPI_Init(NULL, NULL);
+  PMPI_Init(NULL, NULL);
 
   mu_run_test(test__new_mpi_put);
   mu_run_test(test__mpi_rma_op__clone);
   mu_run_test(test__delete_mpi_rma_op);
 
-  MPI_Finalize();
+  PMPI_Finalize();
 
   return NULL;
 }
