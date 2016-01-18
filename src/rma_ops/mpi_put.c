@@ -10,6 +10,7 @@
 
 //-- for memset()
 #include <string.h>
+#include <assert.h>
 
 /*- includes -*/
 
@@ -57,13 +58,13 @@ static OOC_BOOL _bool_vtable_initialized = 0;
 
 //---------------- virtual methods implementations -----------------
 
-/**
- * TODO: here should be virtual methods implementations, like that:
 static T_MpiRmaOp * _clone(const T_MpiRmaOp *me_super)
 {
   return _mpi_rma_op__vtable__get()->p_clone(me_super);
 }
 
+/**
+ * TODO: here should be virtual methods implementations, like that:
 static DArray _split(const T_MpiRmaOp *me_super)
 {
   return _mpi_rma_op__vtable__get()->p_split(me_super);
@@ -74,7 +75,7 @@ static int _execute(const T_MpiRmaOp *me_super)
 {
   T_MpiPut *me = mpi_put__get_by_mpi_rma_op(me_super);
   return MPI_Put(
-      me->p_origin_addr, me->p_origin_count, me->p_origin_datatype,
+      *(me->p_origin_addr), me->p_origin_count, me->p_origin_datatype,
       me_super->p_target_rank,
       me->p_target_disp, me->p_target_count, me->p_target_datatype, me->p_win);
 }
@@ -84,13 +85,11 @@ static int _execute(const T_MpiRmaOp *me_super)
  */
 static void _dtor(T_MpiRmaOp *me_super)
 {
-  //T_MpiPut *me = mpi_put__get_by_mpi_rma_op(me_super);
-  // some desctruct code
+  T_MpiPut *me = mpi_put__get_by_mpi_rma_op(me_super);
 
-  /*- dtor -*/
+  OOC_FREE(me->p_origin_addr);
 
-  // NOTE: this is a subclass, so that after performing destruction code,
-  // we should call desctructor of superclass:
+    //call parent constructor
   _mpi_rma_op__vtable__get()->p_dtor(me_super);
 }
 
@@ -123,6 +122,7 @@ static void _vtable_init()
     //-- and then, our own virtual methods. If we don't override them here,
     //   it's ok: then, methods of base class will be called.
     _super_vtable.p_execute = _execute;
+    _super_vtable.p_clone = _clone;
 
     //-- remember that vtable is already initialized.
     _bool_vtable_initialized = 1;
@@ -145,13 +145,15 @@ T_MpiRmaOp_Res mpi_put__ctor(T_MpiPut *me, const T_MpiPut_CtorParams *p_params)
   {
 
     //-- init virtual methods
-
     _vtable_init();
     me->super.mpi_rma_op.p_vtable = &_super_vtable;
 
-    //-- some construct code
     /*- ctor -*/
-    me->p_origin_addr = p_params->origin_addr;
+    //copy origin addr to local memory
+    me->p_origin_addr = malloc(sizeof(void *));
+    assert(me->p_origin_addr);
+    *me->p_origin_addr = p_params->origin_addr;
+
     me->p_origin_datatype = p_params->origin_datatype;
     me->p_origin_count = p_params->origin_count;
     me->p_target_disp = p_params->target_disp;
@@ -199,13 +201,6 @@ T_MpiPut *mpi_put__get_by_mpi_rma_op(const T_MpiRmaOp *me_super)
  *    ALLOCATOR, DEALLOCATOR
  ******************************************************************************/
 
-/*
- * Allocator and Deallocator
- *
- * Please NOTE: There's not necessary to use them!
- * For instance, you can just allocate in stack or statically or manually from heap,
- * and use _ctor only.
- */
 #if defined OOC_MALLOC && defined OOC_FREE
 
 /* allocator */

@@ -26,6 +26,7 @@ typedef struct S_MpiPut T_MpiPut;
 typedef struct S_MpiPut_CtorParams
 {
   T_MpiRmaOp_CtorParams super_params;
+  //make it as a pointer
   const void *origin_addr;
   int origin_count;
   MPI_Datatype origin_datatype;
@@ -52,7 +53,7 @@ struct S_MpiPut
     T_MpiRmaOp mpi_rma_op;
   } super;
 
-  const void *p_origin_addr;
+  const void **p_origin_addr;
   int p_origin_count;
   MPI_Datatype p_origin_datatype;
   //target_rank is in parent class

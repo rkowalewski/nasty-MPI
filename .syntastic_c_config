@@ -1,5 +1,7 @@
 -Isrc
 -Wall
+-Werror
+-Wextra
 -I/usr/local/Cellar/open-mpi/1.8.4_1/include
 -std=gnu11
 
