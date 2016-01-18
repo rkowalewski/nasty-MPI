@@ -21,10 +21,10 @@ SO_TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 all: CFLAGS += -DNDEBUG -Isrc
 all: $(TARGET) $(SO_TARGET)
 
-dev: CFLAGS += -g -Isrc -Wall -Wextra -Werror -pedantic
-dev: $(TARGET) $(SO_TARGET)
+dev: CFLAGS += -g -Isrc
+dev: $(TARGET) #$(SO_TARGET)
 	cd lib; \
-	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
+	#ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
 	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so
 
 $(SO_TARGET): BUILD_DYNAMIC=1
@@ -33,8 +33,8 @@ $(SO_TARGET): $(TARGET) $(OBJECTS)
 
 $(TARGET): CFLAGS += -fPIC
 $(TARGET): build $(OBJECTS)
-	ar rcs $@ $(OBJECTS)
-	ranlib $@
+	ar -rcs $@ $(OBJECTS)
+	#ranlib $@
 
 build:
 	@mkdir -p build
@@ -44,9 +44,9 @@ build:
 # The Unit Tests
 .PHONY: tests
 tests: LDLIBS = -l$(LIB_NAME)
-tests: LDFLAGS = -Wl,-rpath,./lib/ -L./lib/
-tests: CFLAGS += -g -Isrc -Wall -Wextra -Werror
-tests: lib $(TESTS)
+tests: LDFLAGS = -L./build
+tests: CFLAGS += -g -Isrc -Wall #-Wextra -Werror
+tests: dev $(TESTS)
 	sh ./tests/basic_tests.sh
 
 samples: $(SAMPLES)
