@@ -34,17 +34,20 @@ typedef enum E_MpiRmaOp_Res
   MPI_OS_OP_RES__OK,
 } T_MpiRmaOp_Res;
 
-typedef enum S_MpiRmaOp_Type
+typedef enum E_MpiRmaOp_Type
 {
   MPI_OS_WRITE, MPI_OS_READ,
 } T_MpiRmaOp_Type;
 
+typedef struct S_MpiRmaOp_Info
+{
+  bool p_is_atomic;
+  T_MpiRmaOp_Type p_type;
+} T_MpiRmaOp_Info;
+
 typedef struct S_MpiRmaOp_CtorParams
 {
   int target_rank;
-  bool is_splittable;
-  bool is_atomic;
-  T_MpiRmaOp_Type type;
 } T_MpiRmaOp_CtorParams;
 
 
@@ -72,6 +75,7 @@ typedef int (T_MpiRmaOp_Execute) (const T_MpiRmaOp *me);
 
 typedef void (T_MpiRmaOp_Dump) (const T_MpiRmaOp *me);
 
+typedef const T_MpiRmaOp_Info * (T_MpiRmaOp_InfoGet)  (const T_MpiRmaOp *me);
 
 /**
  * Virtual functions table (vtable)
@@ -84,6 +88,7 @@ typedef struct S_MpiRmaOp_VTable
   T_MpiRmaOp_Split            *p_split;
   T_MpiRmaOp_Execute          *p_execute;
   T_MpiRmaOp_Dump             *p_dump; 
+  T_MpiRmaOp_InfoGet          *p_info;
 } T_MpiRmaOp_VTable;
 
 
@@ -101,11 +106,10 @@ struct S_MpiRmaOp
   //-- TODO: add fields to object context
   /*- object_context -*/
 
+  //vtable
   struct S_MpiRmaOp_VTable *p_vtable;
+  //mpi parameters
   int p_target_rank;
-  bool p_is_splittable;
-  bool p_is_atomic;
-  T_MpiRmaOp_Type p_type;
 };
 
 
@@ -153,6 +157,11 @@ static inline int mpi_rma_op__execute(const T_MpiRmaOp *me)
 static inline void mpi_rma_op__dump(const T_MpiRmaOp *me)
 {
   me->p_vtable->p_dump(me);
+}
+
+static inline const T_MpiRmaOp_Info * mpi_rma_op__info(const T_MpiRmaOp *me)
+{
+  return me->p_vtable->p_info(me);
 }
 /*******************************************************************************
  *    PROTECTED METHOD PROTOTYPES

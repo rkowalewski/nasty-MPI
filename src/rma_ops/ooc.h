@@ -11,6 +11,7 @@
  ******************************************************************************/
 
 #include "ooc_cfg.h"
+#include <stddef.h>
 
 
 
@@ -21,7 +22,11 @@
 /**
  * Calculates offset of member inside the struct
  */
-#define OOC_OFFSETOF(_struct_, _member_)  (size_t)&(((_struct_ *)0)->_member_)
+#ifndef offsetof //is usually defined in stddef.h
+#define offsetof(_struct_, _member_) (size_t)&(((_struct_ *)0)->_member_)
+#endif
+
+//#define OOC_OFFSETOF(_struct_, _member_) offsetof(_struct, _member_)
 
 /**
  * Calculates pointer to subclass (i.e. containing struct) from pointer to
@@ -35,7 +40,7 @@
                                                                            \
    ((_T_Subclass_ *)(                                                      \
       (unsigned char *)(_superclass_pt_)                                   \
-      - OOC_OFFSETOF(_T_Subclass_, _superclass_field_name_)                \
+      - offsetof(_T_Subclass_, _superclass_field_name_)                \
       )                                                                    \
     )
 

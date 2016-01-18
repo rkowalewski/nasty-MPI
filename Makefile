@@ -21,7 +21,7 @@ SO_TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 all: CFLAGS += -DNDEBUG -Isrc
 all: $(TARGET) $(SO_TARGET)
 
-dev: CFLAGS += -g -Isrc
+dev: CFLAGS += -g -Isrc -Wall -Wextra
 dev: $(TARGET) #$(SO_TARGET)
 	cd lib; \
 	#ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \

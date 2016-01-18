@@ -96,9 +96,12 @@ static int _execute(const T_MpiRmaOp *me)
 static void _dump(const T_MpiRmaOp *me)
 {
   printf("target_rank: %d\n", me->p_target_rank);
-  printf("is_splittable: %d\n", me->p_is_splittable);
-  printf("is_atomic: %d\n", me->p_is_atomic);
-  printf("type: %d\n", me->p_type);
+}
+
+static const T_MpiRmaOp_Info * _info(const T_MpiRmaOp *me)
+{
+  (void) me;
+  assert(false);
 }
 
 static void _vtable_init()
@@ -111,6 +114,7 @@ static void _vtable_init()
       _vtable.p_split = _split;
       _vtable.p_execute = _execute;
       _vtable.p_dump = _dump;
+      _vtable.p_info = _info;
 
       _bool_vtable_initialized = 1;
    }
@@ -135,10 +139,6 @@ T_MpiRmaOp_Res mpi_rma_op__ctor(T_MpiRmaOp *me, const T_MpiRmaOp_CtorParams *p_p
 
    me->p_vtable = &_vtable;
    me->p_target_rank= p_params->target_rank;
-
-   me->p_is_splittable = p_params->is_splittable;
-   me->p_is_atomic = p_params->is_atomic;
-   me->p_type = p_params->type;
 
    return ret;
 }

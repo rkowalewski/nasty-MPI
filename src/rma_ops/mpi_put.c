@@ -11,6 +11,7 @@
 //-- for memset()
 #include <string.h>
 #include <assert.h>
+#include <mpi_type/mpi_type_copy.h>
 
 /*- includes -*/
 
@@ -40,6 +41,11 @@ static OOC_BOOL _bool_vtable_initialized = 0;
  *    PUBLIC DATA
  ******************************************************************************/
 
+const T_MpiRmaOp_Info p_info = {
+  .p_is_atomic = false,
+  .p_type = MPI_OS_WRITE
+};
+
 /*******************************************************************************
  *    EXTERNAL DATA
  ******************************************************************************/
@@ -60,7 +66,27 @@ static OOC_BOOL _bool_vtable_initialized = 0;
 
 static T_MpiRmaOp * _clone(const T_MpiRmaOp *me_super)
 {
-  return _mpi_rma_op__vtable__get()->p_clone(me_super);
+  T_MpiPut *me = mpi_put__get_by_mpi_rma_op(me_super);
+
+  void * origin_addr_copy = mpi_buffer_copy(*me->p_origin_addr, me->p_origin_datatype, me->p_origin_count);
+  assert(origin_addr_copy);
+
+  T_MpiPut_CtorParams params = {
+    .super_params = {
+      .target_rank = me_super->p_target_rank
+    },
+    .origin_addr = origin_addr_copy,
+    .origin_count = me->p_origin_count,
+    .origin_datatype = me->p_origin_datatype,
+    .target_disp = me->p_target_disp,
+    .target_count = me->p_target_count,
+    .target_datatype = me->p_target_datatype,
+    .win = me->p_win
+  };
+
+  T_MpiPut *clone = new_mpi_put(&params);
+  clone->p_is_copy = true;
+  return mpi_put__mpi_rma_op__get(clone);
 }
 
 /**
@@ -80,12 +106,21 @@ static int _execute(const T_MpiRmaOp *me_super)
       me->p_target_disp, me->p_target_count, me->p_target_datatype, me->p_win);
 }
 
+static const T_MpiRmaOp_Info * _info(const T_MpiRmaOp *me)
+{
+  (void) me;
+  return &p_info;
+}
 /**
  * Destructor (virtual)
  */
 static void _dtor(T_MpiRmaOp *me_super)
 {
   T_MpiPut *me = mpi_put__get_by_mpi_rma_op(me_super);
+
+  //free memory space of cloned operation
+  if (me->p_is_copy)
+    OOC_FREE(*me->p_origin_addr);
 
   OOC_FREE(me->p_origin_addr);
 
@@ -123,6 +158,7 @@ static void _vtable_init()
     //   it's ok: then, methods of base class will be called.
     _super_vtable.p_execute = _execute;
     _super_vtable.p_clone = _clone;
+    _super_vtable.p_info = _info;
 
     //-- remember that vtable is already initialized.
     _bool_vtable_initialized = 1;
