@@ -1,6 +1,0 @@
--Isrc
--Wall
--Wextra
--I/opt/openmpi-1.8/include
--std=gnu11
-

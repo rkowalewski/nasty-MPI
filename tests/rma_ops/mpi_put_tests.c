@@ -40,14 +40,7 @@ char * test__new_mpi_put(void)
   mu_assert(put->p_target_disp == 0, "put->target_disp must be 0.");
   mu_assert(put->p_target_count == 1, "put->target_count must be 10.");
   mu_assert(put->p_target_datatype == MPI_INT, "put->target_datatype must be MPI_INT.");
-/*
-  int *arr = malloc(10 * sizeof(int));
-  size_t i;
 
-  for (i = 0; i < 10; i++) arr[i] = i * 10;
-
-  for (i = 0; i < 10; i++) printf("entry value: %d\n",arr[i]) ;
-*/
   return NULL;
 }
 
