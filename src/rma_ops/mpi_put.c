@@ -10,6 +10,7 @@
 
 //-- for memset()
 #include <string.h>
+#include <stdio.h>
 #include <assert.h>
 #include <mpi_type/mpi_type_copy.h>
 
@@ -66,44 +67,40 @@ const T_MpiRmaOp_Info p_info = {
 
 static T_MpiRmaOp * _clone(const T_MpiRmaOp *me_super)
 {
+
   T_MpiPut *me = mpi_put__get_by_mpi_rma_op(me_super);
 
   void * origin_addr_copy = mpi_buffer_copy(*me->p_origin_addr, me->p_origin_datatype, me->p_origin_count);
-  assert(origin_addr_copy);
+  
+  T_MpiPut_CtorParams params;
 
-  T_MpiPut_CtorParams params = {
-    .super_params = {
-      .target_rank = me_super->p_target_rank
-    },
-    .origin_addr = origin_addr_copy,
-    .origin_count = me->p_origin_count,
-    .origin_datatype = me->p_origin_datatype,
-    .target_disp = me->p_target_disp,
-    .target_count = me->p_target_count,
-    .target_datatype = me->p_target_datatype,
-    .win = me->p_win
-  };
+  params.super_params.target_rank = me_super->p_target_rank;
+
+  params.origin_addr = origin_addr_copy;
+  params.origin_count = me->p_origin_count;
+  params.origin_datatype = me->p_origin_datatype;
+  params.target_disp = me->p_target_disp;
+  params.target_count = me->p_target_count;
+  params.target_datatype = me->p_target_datatype;
+  params.win = me->p_win;
 
   T_MpiPut *clone = new_mpi_put(&params);
   clone->p_is_copy = true;
   return mpi_put__mpi_rma_op__get(clone);
 }
 
-/**
- * TODO: here should be virtual methods implementations, like that:
 static DArray _split(const T_MpiRmaOp *me_super)
 {
   return _mpi_rma_op__vtable__get()->p_split(me_super);
 }
 
-*/
 static int _execute(const T_MpiRmaOp *me_super)
 {
   T_MpiPut *me = mpi_put__get_by_mpi_rma_op(me_super);
   return MPI_Put(
-      *(me->p_origin_addr), me->p_origin_count, me->p_origin_datatype,
-      me_super->p_target_rank,
-      me->p_target_disp, me->p_target_count, me->p_target_datatype, me->p_win);
+           *(me->p_origin_addr), me->p_origin_count, me->p_origin_datatype,
+           me_super->p_target_rank,
+           me->p_target_disp, me->p_target_count, me->p_target_datatype, me->p_win);
 }
 
 static const T_MpiRmaOp_Info * _info(const T_MpiRmaOp *me)
@@ -124,7 +121,7 @@ static void _dtor(T_MpiRmaOp *me_super)
 
   OOC_FREE(me->p_origin_addr);
 
-    //call parent constructor
+  //call parent constructor
   _mpi_rma_op__vtable__get()->p_dtor(me_super);
 }
 
@@ -188,7 +185,7 @@ T_MpiRmaOp_Res mpi_put__ctor(T_MpiPut *me, const T_MpiPut_CtorParams *p_params)
     //copy origin addr to local memory
     me->p_origin_addr = malloc(sizeof(void *));
     assert(me->p_origin_addr);
-    *me->p_origin_addr = p_params->origin_addr;
+    *(me->p_origin_addr) = p_params->origin_addr;
 
     me->p_origin_datatype = p_params->origin_datatype;
     me->p_origin_count = p_params->origin_count;
@@ -196,7 +193,6 @@ T_MpiRmaOp_Res mpi_put__ctor(T_MpiPut *me, const T_MpiPut_CtorParams *p_params)
     me->p_target_count = p_params->target_count;
     me->p_target_datatype = p_params->target_datatype;
     me->p_win = p_params->win;
-
   }
   return ret;
 }

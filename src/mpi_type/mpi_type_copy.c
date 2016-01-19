@@ -19,7 +19,7 @@ void *mpi_buffer_copy(const void *src, MPI_Datatype type, int count)
   int size;
   MPI_Type_size(type, &size);
 
-  copy = malloc(size * count);
+  copy = malloc( size * count);
   assert(copy);
   memcpy(copy, src, size * count);
 
