@@ -33,12 +33,13 @@ void run_rma_test(int nprocs_per_node)
 
     MPI_Put( &payload, 1, MPI_INT, mem_rank, disp_payload, 1, MPI_INT, win);
     MPI_Put( &flag, 1, MPI_INT, mem_rank, disp_guard, 1, MPI_INT, win);
-
+    MPI_Win_flush( mem_rank, win );
   }
 
-  MPI_Win_unlock_all(win);
-
+  printf("---- BARRIER -----\n");
   MPI_Barrier(MPI_COMM_WORLD);
+
+  MPI_Win_unlock_all(win);
 
   if (myrank == mem_rank)
   {
