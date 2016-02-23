@@ -25,9 +25,9 @@ void DArray_shuffle(DArray array)
   size_t i, j;
 
   if (array->size == 2) {
-    unsigned int rand = random_seq();
-    i = (size_t) (rand % 2);
-    if (i == 0)
+    //unsigned int rand = random_seq();
+    //i = (size_t) (rand % 2);
+    //if (i == 0)
       swap(array->contents, array->contents, 0, 1);
   } else {
     for (j = array->size - 1; j > 1; j--)
