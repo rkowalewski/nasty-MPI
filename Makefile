@@ -21,7 +21,7 @@ SO_TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 release: CFLAGS += -DNDEBUG
 debug: CFLAGS += -DDEBUG
 
-all: -Isrc
+all: CFLAGS += -Isrc
 all: $(TARGET) $(SO_TARGET)
 
 dev: CFLAGS += -g -Isrc -Wall -Wextra -Werror -pedantic
