@@ -18,7 +18,10 @@ TARGET=build/lib$(LIB_NAME).a
 SO_TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 
 # The Target Build
-all: CFLAGS += -DNDEBUG -Isrc
+release: CFLAGS += -DNDEBUG
+debug: CFLAGS += -DDEBUG
+
+all: CFLAGS += -Isrc
 all: $(TARGET) $(SO_TARGET)
 
 dev: CFLAGS += -g -Isrc -Wall -Wextra -Werror -pedantic
