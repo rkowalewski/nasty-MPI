@@ -1,6 +1,6 @@
 include Makefile.DEF
 
-CFLAGS=-O3 -std=c11 $(OPTFLAGS)
+CFLAGS=-O3 -std=c11 $(OPTFLAGS) -Isrc
 LIBS=$(OPTLIBS)
 PREFIX?=/usr/local
 
@@ -19,19 +19,26 @@ SO_TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 
 # The Target Build
 
-debug: CFLAGS += -g -Isrc -Wall -Wextra -Werror -pedantic
+debug: CFLAGS += -ggdb -Wall -Wextra -Werror -pedantic
 debug: $(TARGET) $(SO_TARGET)
 	cd lib; \
 	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
+	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so \
 
-release: CFLAGS += -Isrc -DNDEBUG
+release: CFLAGS += -DNDEBUG
 release: $(TARGET) $(SO_TARGET)
+	cd lib; \
+	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
+	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so \
 
+lib/lib$(LIB_NAME).so: $(SO_TARGET)
+	cd lib; \
+	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
+	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so \
 
 $(SO_TARGET): BUILD_DYNAMIC=1
 $(SO_TARGET): $(TARGET) $(OBJECTS)
 	$(CC) -shared -Wl,-soname,lib$(LIB_NAME).so.$(MAJOR) $(OBJECTS) -o $@ -lc
-	cd build; ln -sf lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so
 
 $(TARGET): CFLAGS += -fPIC
 $(TARGET): build $(OBJECTS)
@@ -47,7 +54,7 @@ build:
 .PHONY: tests
 tests: LDLIBS = -l$(LIB_NAME)
 tests: LDFLAGS = -Wl,-rpath,./lib/ -L./lib/
-tests: CFLAGS += -g -Isrc -Wall -Wextra -Werror
+tests: CFLAGS += -g -Wall -Wextra -Werror
 tests: lib $(TESTS)
 	sh ./tests/basic_tests.sh
 
