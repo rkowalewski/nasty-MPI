@@ -19,18 +19,18 @@ SO_TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 
 # The Target Build
 
-all: CFLAGS += -Isrc -DNDEBUG
-all: $(TARGET) $(SO_TARGET)
+release: CFLAGS += -Isrc -DNDEBUG
+release: $(TARGET) $(SO_TARGET)
 
-dev: CFLAGS += -g -Isrc -Wall -Wextra -Werror -pedantic
-dev: $(TARGET) $(SO_TARGET)
+debug: CFLAGS += -g -Isrc -Wall -Wextra -Werror -pedantic
+debug: $(TARGET) $(SO_TARGET)
 	cd lib; \
 	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
-	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so
 
 $(SO_TARGET): BUILD_DYNAMIC=1
 $(SO_TARGET): $(TARGET) $(OBJECTS)
 	$(CC) -shared -Wl,-soname,lib$(LIB_NAME).so.$(MAJOR) $(OBJECTS) -o $@ -lc
+	cd build; ln -sf lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so
 
 $(TARGET): CFLAGS += -fPIC
 $(TARGET): build $(OBJECTS)
