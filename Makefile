@@ -19,13 +19,14 @@ SO_TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 
 # The Target Build
 
-release: CFLAGS += -Isrc -DNDEBUG
-release: $(TARGET) $(SO_TARGET)
-
 debug: CFLAGS += -g -Isrc -Wall -Wextra -Werror -pedantic
 debug: $(TARGET) $(SO_TARGET)
 	cd lib; \
 	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
+
+release: CFLAGS += -Isrc -DNDEBUG
+release: $(TARGET) $(SO_TARGET)
+
 
 $(SO_TARGET): BUILD_DYNAMIC=1
 $(SO_TARGET): $(TARGET) $(OBJECTS)
