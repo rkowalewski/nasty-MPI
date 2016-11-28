@@ -7,6 +7,8 @@
 #include "runtime.h"
 #include "init.h"
 
+extern int nanosleep(const struct timespec *req, struct timespec *rem);
+
 //if the programmer fires 50 times the same mpi operation without a flush, we forward it to the mpi library...
 #define MAX_SIGNATURE_LOOKUP_COUNT 50
 
@@ -68,7 +70,7 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
           "target_rank: %d\n"
           "target_disp: %td\n"
           "target_count: %d\n",
-          op_info->data.get.origin_addr, op_info->data.get.origin_count, 
+          op_info->data.get.origin_addr, op_info->data.get.origin_count,
           op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count
          );
     rc = PMPI_Get(
@@ -277,7 +279,7 @@ int nasty_mpi_handle_op(MPI_Win win, Nasty_mpi_op *op)
   if (submit_time == random_choice)
   {
     //make random choice between maximum_delay or fire_immediate
-    submit_time = random_seq() % 2;
+    submit_time = (Submit_time) (random_seq() % 2);
   }
 
   if (submit_time == maximum_delay)

@@ -1,6 +1,6 @@
 include Makefile.DEF
 
-CFLAGS=-O3 -std=gnu11  $(OPTFLAGS)
+CFLAGS=-O3 -std=c11 $(OPTFLAGS)
 LIBS=$(OPTLIBS)
 PREFIX?=/usr/local
 
@@ -18,10 +18,8 @@ TARGET=build/lib$(LIB_NAME).a
 SO_TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 
 # The Target Build
-release: CFLAGS += -DNDEBUG
-debug: CFLAGS += -DDEBUG
 
-all: CFLAGS += -Isrc
+all: CFLAGS += -Isrc -DNDEBUG
 all: $(TARGET) $(SO_TARGET)
 
 dev: CFLAGS += -g -Isrc -Wall -Wextra -Werror -pedantic
@@ -72,6 +70,15 @@ clean:
 install: lib
 	install -d $(DESTDIR)/$(PREFIX)/lib/
 	install $(TARGET) $(DESTDIR)/$(PREFIX)/lib/
+	install $(SO_TARGET) $(DESTDIR)/$(PREFIX)/lib/
 	ldconfig -n  $(DESTDIR)/$(PREFIX)/lib/
 	cd  $(DESTDIR)/$(PREFIX)/lib/; \
 	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so
+
+# The Install
+uninstall:
+	$(RM) $(DESTDIR)/$(PREFIX)/lib/$(notdir $(TARGET))
+	$(RM) $(DESTDIR)/$(PREFIX)/lib/$(notdir $(SO_TARGET))
+	$(RM) $(DESTDIR)/$(PREFIX)/lib/lib$(LIB_NAME).so.$(MAJOR)
+	$(RM) $(DESTDIR)/$(PREFIX)/lib/lib$(LIB_NAME).so
+
