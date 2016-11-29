@@ -360,7 +360,10 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
       if (!op_info) continue;
       //add some latency by sleep for a random number of milliseconds (between 0 and 1500)
-      _sleep_milliseconds(random_seq() % 241);
+      if (config.sleep_interval > 0) {
+        _sleep_milliseconds(random_seq() % config.sleep_interval);
+      }
+
       bool _flush = (mayFlush && (op_info->type == rma_put)) ? random_seq() % 2 : 0;
 
       res = invoke_mpi(win, op_info, _flush);
