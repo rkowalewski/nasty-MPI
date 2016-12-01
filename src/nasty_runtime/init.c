@@ -46,8 +46,6 @@ static inline void load_config(void)
 {
   char* val = getenv("NASTY_SUBMIT_TIME");
 
-  debug("loading config...");
-
   if (val) {
     if (strcmp(val, "fire_immediate") == 0) {
       config.time = fire_immediate;
@@ -107,6 +105,9 @@ int nasty_mpi_init(int *argc, char ***argv)
   random_init(seed, seed + 1);
   win_storage_init();
   load_config();
+
+  log_info("Initialization successfully finished");
+
   return 0;
 }
 
@@ -117,4 +118,5 @@ Nasty_mpi_config get_nasty_mpi_config(void)
 void nasty_mpi_finalize(void)
 {
   win_storage_finalize();
+  log_info("Finalization successfully finished");
 }

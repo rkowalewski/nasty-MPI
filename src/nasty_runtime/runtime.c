@@ -35,6 +35,7 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
 
   if (op_info == NULL || op_info->is_sent) return MPI_SUCCESS;
   int rc = -1;
+  char * msg;
   if (op_info->type == rma_put)
   {
     debug("--executing actual put---\n"
@@ -52,15 +53,7 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
            op_info->target_rank, op_info->data.put.target_disp, op_info->data.put.target_count, op_info->data.put.target_datatype,
            win);
 
-    if (rc == MPI_SUCCESS && flush)
-    {
-      debug("flushing %s","put");
-      bool _flush_local = (random_seq() % 2);
-      if (_flush_local)
-        return PMPI_Win_flush_local(op_info->target_rank, win);
-      else
-        return PMPI_Win_flush(op_info->target_rank, win);
-    }
+    msg = "flushing put";
   }
   else if (op_info->type == rma_get)
   {
@@ -78,15 +71,18 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
            op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count, op_info->data.get.target_datatype,
            win);
 
-    if (rc == MPI_SUCCESS && flush)
-    {
-      debug("flushing %s","get");
-      bool _flush_local = (random_seq() % 2);
-      if (_flush_local)
-        return PMPI_Win_flush_local(op_info->target_rank, win);
-      else
-        return PMPI_Win_flush(op_info->target_rank, win);
-    }
+    msg = "flushing get";
+  }
+
+  if (rc == MPI_SUCCESS && flush)
+  {
+    debug("flushing %s", msg);
+
+    bool _flush_local = (random_seq() % 2);
+    if (_flush_local)
+      return PMPI_Win_flush_local(op_info->target_rank, win);
+    else
+      return PMPI_Win_flush(op_info->target_rank, win);
   }
 
   return rc;
