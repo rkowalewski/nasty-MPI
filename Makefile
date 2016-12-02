@@ -1,6 +1,6 @@
 include Makefile.DEF
 
-CFLAGS=-O3 -std=c11 $(OPTFLAGS) -Isrc -Werror -pedantic -Wextra -Wall
+CFLAGS=-O3 -std=c11 $(OPTFLAGS) -Isrc -Wextra -Wall
 LIBS=$(OPTLIBS)
 PREFIX?=/usr/local
 
@@ -25,7 +25,7 @@ release: $(TARGET) $(SO_TARGET)
 	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
 	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so \
 
-debug: CFLAGS += -ggdd
+debug: CFLAGS += -ggdb -pedantic
 debug: $(TARGET) $(SO_TARGET)
 	cd lib; \
 	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \

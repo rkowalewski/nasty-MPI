@@ -44,5 +44,7 @@ DArray Nasty_mpi_op_divide(Nasty_mpi_op *op);
 int Nasty_mpi_op_signature_equal(Nasty_mpi_op_signature_t *alpha, Nasty_mpi_op_signature_t *beta);
 int Nasty_mpi_op_is_divisible(Nasty_mpi_op *op);
 
+void Nasty_mpi_op_type_to_str(const Nasty_mpi_op * op_info, char * const buf, size_t len);
+
 
 #endif
