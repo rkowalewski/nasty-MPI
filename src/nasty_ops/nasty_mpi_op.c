@@ -141,3 +141,17 @@ DArray Nasty_mpi_op_divide(Nasty_mpi_op *op_info)
 
   return divided_ops;
 }
+
+void Nasty_mpi_op_type_to_str(const Nasty_mpi_op * op_info, char * const buf, size_t len) {
+  (void) len;
+  assert(len > 10);
+  switch (op_info->type) {
+    case rma_put:
+      strcpy(buf, "MPI_Get");
+      break;
+    case rma_get:
+      strcpy(buf, "MPI_Put");
+      break;
+    default: ;
+  }
+}

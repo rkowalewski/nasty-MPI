@@ -15,7 +15,6 @@ int MPI_Init(int *argc, char ***argv)
   int result = PMPI_Init(argc, argv);
 
   if (result == MPI_SUCCESS) {
-    debug("calling nasty_mpi_init %d", 0);
     nasty_mpi_init(argc, argv);
   }
 

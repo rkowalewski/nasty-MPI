@@ -7,6 +7,8 @@
 #include "runtime.h"
 #include "init.h"
 
+extern int nanosleep(const struct timespec *req, struct timespec *rem);
+
 //if the programmer fires 50 times the same mpi operation without a flush, we forward it to the mpi library...
 #define MAX_SIGNATURE_LOOKUP_COUNT 50
 
@@ -49,16 +51,6 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
            op_info->data.put.origin_addr, op_info->data.put.origin_count, op_info->data.put.origin_datatype,
            op_info->target_rank, op_info->data.put.target_disp, op_info->data.put.target_count, op_info->data.put.target_datatype,
            win);
-
-    if (rc == MPI_SUCCESS && flush)
-    {
-      debug("flushing %s","put");
-      bool _flush_local = (random_seq() % 2);
-      if (_flush_local)
-        return PMPI_Win_flush_local(op_info->target_rank, win);
-      else
-        return PMPI_Win_flush(op_info->target_rank, win);
-    }
   }
   else if (op_info->type == rma_get)
   {
@@ -68,23 +60,26 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
           "target_rank: %d\n"
           "target_disp: %td\n"
           "target_count: %d\n",
-          op_info->data.get.origin_addr, op_info->data.get.origin_count, 
+          op_info->data.get.origin_addr, op_info->data.get.origin_count,
           op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count
          );
     rc = PMPI_Get(
            op_info->data.get.origin_addr, op_info->data.get.origin_count, op_info->data.get.origin_datatype,
            op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count, op_info->data.get.target_datatype,
            win);
+  }
 
-    if (rc == MPI_SUCCESS && flush)
-    {
-      debug("flushing %s","get");
-      bool _flush_local = (random_seq() % 2);
-      if (_flush_local)
-        return PMPI_Win_flush_local(op_info->target_rank, win);
-      else
-        return PMPI_Win_flush(op_info->target_rank, win);
-    }
+  if (rc == MPI_SUCCESS && flush)
+  {
+    char buf[128];
+    Nasty_mpi_op_type_to_str(op_info, buf, 128);
+    debug("flushing %s", buf);
+
+    bool _flush_local = (random_seq() % 2);
+    if (_flush_local)
+      return PMPI_Win_flush_local(op_info->target_rank, win);
+    else
+      return PMPI_Win_flush(op_info->target_rank, win);
   }
 
   return rc;
@@ -277,7 +272,7 @@ int nasty_mpi_handle_op(MPI_Win win, Nasty_mpi_op *op)
   if (submit_time == random_choice)
   {
     //make random choice between maximum_delay or fire_immediate
-    submit_time = random_seq() % 2;
+    submit_time = (Submit_time) (random_seq() % 2);
   }
 
   if (submit_time == maximum_delay)
@@ -358,7 +353,10 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
       if (!op_info) continue;
       //add some latency by sleep for a random number of milliseconds (between 0 and 1500)
-      _sleep_milliseconds(random_seq() % 1103);
+      if (config.sleep_interval > 0) {
+        _sleep_milliseconds(random_seq() % config.sleep_interval);
+      }
+
       bool _flush = (mayFlush && (op_info->type == rma_put)) ? random_seq() % 2 : 0;
 
       res = invoke_mpi(win, op_info, _flush);

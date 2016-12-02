@@ -6,6 +6,8 @@
 #include <string.h>
 #include <macros/logging.h>
 #include <util/random.h>
+#include <errno.h>
+#include <limits.h>
 #include "init.h"
 #include "win_storage.h"
 
@@ -14,18 +16,40 @@ static Nasty_mpi_config config = {
   .order = random_order,
   .split_rma_ops = true,
   .mpich_asynch_progress = false,
+  .sleep_interval = 31,
 };
 
 static bool _isInitialized = false;
 
+static inline long getenv_long(const char * env) {
+  if (NULL == env) return -1;
+  if (strlen(env) == 0) return -1;
+
+  char * endptr;
+  errno = 0;
+
+  long val = strtol(env, &endptr, 10);
+
+  if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+      || (errno != 0 && val == 0)) {
+    return -1;
+  }
+
+  if (endptr == env) {
+    return -1;
+  }
+
+  return val;
+}
+
 static inline void load_config(void)
 {
-  char* val = getenv("SUBMIT_TIME");
+  char* val = getenv("NASTY_SUBMIT_TIME");
 
   if (val) {
     if (strcmp(val, "fire_immediate") == 0) {
       config.time = fire_immediate;
-    } 
+    }
     /*else if (strcmp(val, "fire_and_sync")) {
       config.time = fire_immediate;
       config.sync_all_ops = true;
@@ -35,7 +59,7 @@ static inline void load_config(void)
     }
   }
 
-  val = getenv("SUBMIT_ORDER");
+  val = getenv("NASTY_SUBMIT_ORDER");
 
   if (val) {
     if (strcmp(val, "program_order") == 0) {
@@ -49,8 +73,21 @@ static inline void load_config(void)
 
   val = getenv("MPICH_ASYNCH_PROGRESS");
 
-  if (val && strcmp(val, "1") == 0) {
-    config.mpich_asynch_progress = true;
+  if (val) {
+    int val_long = getenv_long(val);
+    if (val_long == -1 || val_long == 0)
+      config.mpich_asynch_progress = false;
+    else
+      config.mpich_asynch_progress = true;
+  }
+
+  val = getenv("NASTY_SLEEP_INTERVAL");
+  if (val) {
+    int val_sleep = getenv_long(val);
+    if (val_sleep == -1)
+      config.sleep_interval = 0;
+    else
+      config.sleep_interval = val_sleep;
   }
 }
 
@@ -68,6 +105,9 @@ int nasty_mpi_init(int *argc, char ***argv)
   random_init(seed, seed + 1);
   win_storage_init();
   load_config();
+
+  log_info("Initialization successfully finished");
+
   return 0;
 }
 
@@ -78,4 +118,5 @@ Nasty_mpi_config get_nasty_mpi_config(void)
 void nasty_mpi_finalize(void)
 {
   win_storage_finalize();
+  log_info("Finalization successfully finished");
 }

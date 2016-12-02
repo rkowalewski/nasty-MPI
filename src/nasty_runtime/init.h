@@ -27,8 +27,10 @@ typedef struct Nasty_mpi_config
   Submit_order order;
   //Split RMA Operations with basic Datatypes
   bool split_rma_ops;
+  //MPICH_ASYNCH_PROGRESS Flag in MPICH
   bool mpich_asynch_progress;
-  //bool sync_all_ops;
+  //sleep interval between RMA operations
+  long sleep_interval;
 } Nasty_mpi_config;
 
 int nasty_mpi_init(int *argc, char ***argv);

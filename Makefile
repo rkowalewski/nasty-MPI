@@ -1,6 +1,6 @@
 include Makefile.DEF
 
-CFLAGS=-O3 -std=gnu11  $(OPTFLAGS)
+CFLAGS=-O3 -std=c11 $(OPTFLAGS) -Isrc -Wextra -Wall
 LIBS=$(OPTLIBS)
 PREFIX?=/usr/local
 
@@ -18,17 +18,23 @@ TARGET=build/lib$(LIB_NAME).a
 SO_TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 
 # The Target Build
+
 release: CFLAGS += -DNDEBUG
-debug: CFLAGS += -DDEBUG
-
-all: CFLAGS += -Isrc
-all: $(TARGET) $(SO_TARGET)
-
-dev: CFLAGS += -g -Isrc -Wall -Wextra -Werror -pedantic
-dev: $(TARGET) $(SO_TARGET)
+release: $(TARGET) $(SO_TARGET)
 	cd lib; \
 	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
-	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so
+	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so \
+
+debug: CFLAGS += -ggdb -pedantic
+debug: $(TARGET) $(SO_TARGET)
+	cd lib; \
+	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
+	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so \
+
+lib/lib$(LIB_NAME).so: $(SO_TARGET)
+	cd lib; \
+	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
+	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so \
 
 $(SO_TARGET): BUILD_DYNAMIC=1
 $(SO_TARGET): $(TARGET) $(OBJECTS)
@@ -48,7 +54,7 @@ build:
 .PHONY: tests
 tests: LDLIBS = -l$(LIB_NAME)
 tests: LDFLAGS = -Wl,-rpath,./lib/ -L./lib/
-tests: CFLAGS += -g -Isrc -Wall -Wextra -Werror
+tests: CFLAGS += -g -Wall -Wextra -Werror
 tests: lib $(TESTS)
 	sh ./tests/basic_tests.sh
 
@@ -72,6 +78,15 @@ clean:
 install: lib
 	install -d $(DESTDIR)/$(PREFIX)/lib/
 	install $(TARGET) $(DESTDIR)/$(PREFIX)/lib/
+	install $(SO_TARGET) $(DESTDIR)/$(PREFIX)/lib/
 	ldconfig -n  $(DESTDIR)/$(PREFIX)/lib/
 	cd  $(DESTDIR)/$(PREFIX)/lib/; \
 	ln -fs lib$(LIB_NAME).so.$(MAJOR) lib$(LIB_NAME).so
+
+# The Install
+uninstall:
+	$(RM) $(DESTDIR)/$(PREFIX)/lib/$(notdir $(TARGET))
+	$(RM) $(DESTDIR)/$(PREFIX)/lib/$(notdir $(SO_TARGET))
+	$(RM) $(DESTDIR)/$(PREFIX)/lib/lib$(LIB_NAME).so.$(MAJOR)
+	$(RM) $(DESTDIR)/$(PREFIX)/lib/lib$(LIB_NAME).so
+
