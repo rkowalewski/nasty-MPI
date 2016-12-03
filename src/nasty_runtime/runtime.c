@@ -37,15 +37,14 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
   int rc = -1;
   if (op_info->type == rma_put)
   {
-    debug("--executing actual put---\n"
-          "origin_addr: %p\n"
-          "origin_count: %d\n"
-          "target_rank: %d\n"
-          "target_disp: %td\n"
-          "target_count: %d\n",
-          op_info->data.put.origin_addr, op_info->data.put.origin_count,
-          op_info->target_rank, op_info->data.put.target_disp, op_info->data.put.target_count
-         );
+    debug("--executing actual put---");
+    debug("--MPI_Put: origin { addr: %p count: %d }",
+          op_info->data.put.origin_addr,
+          op_info->data.put.origin_count);
+    debug("--MPI_Put  target { rank: %d disp: %td count: %d }",
+          op_info->target_rank,
+          op_info->data.put.target_disp,
+          op_info->data.put.target_count);
 
     rc = PMPI_Put(
            op_info->data.put.origin_addr, op_info->data.put.origin_count, op_info->data.put.origin_datatype,
@@ -54,15 +53,15 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
   }
   else if (op_info->type == rma_get)
   {
-    debug("--executing actual get---\n"
-          "origin_addr: %p\n"
-          "origin_count: %d\n"
-          "target_rank: %d\n"
-          "target_disp: %td\n"
-          "target_count: %d\n",
-          op_info->data.get.origin_addr, op_info->data.get.origin_count,
-          op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count
-         );
+    debug("--executing actual get---");
+    debug("--MPI_Get: origin { addr: %p count: %d }",
+          op_info->data.get.origin_addr,
+          op_info->data.get.origin_count);
+    debug("--MPI_Get: target { rank: %d disp: %td count: %d }",
+          op_info->target_rank,
+          op_info->data.get.target_disp,
+          op_info->data.get.target_count);
+
     rc = PMPI_Get(
            op_info->data.get.origin_addr, op_info->data.get.origin_count, op_info->data.get.origin_datatype,
            op_info->target_rank, op_info->data.get.target_disp, op_info->data.get.target_count, op_info->data.get.target_datatype,
