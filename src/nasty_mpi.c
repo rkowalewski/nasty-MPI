@@ -149,6 +149,7 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
 
 int MPI_Win_flush(int rank, MPI_Win win)
 {
+  debug("--MPI_Win_flush--- %d", 0);
   //execute all cached calls
   nasty_mpi_execute_cached_calls(win, rank, false);
   return PMPI_Win_flush(rank, win);

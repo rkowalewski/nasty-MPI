@@ -8,3 +8,4 @@ tests/*.log
 samples/*.log
 .*.swp
 tags
+*.log
