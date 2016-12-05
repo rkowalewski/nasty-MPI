@@ -39,10 +39,10 @@ typedef struct Nasty_mpi_op
 
 void Nasty_mpi_op_signature(Nasty_mpi_op *op, Nasty_mpi_op_signature_t *call_signature);
 void Nasty_mpi_op_type_str(Nasty_mpi_op *op, char* str);
-DArray Nasty_mpi_op_divide(Nasty_mpi_op *op);
+DArray Nasty_mpi_op_divide(Nasty_mpi_op *op, int win_disp_unit);
 
 int Nasty_mpi_op_signature_equal(Nasty_mpi_op_signature_t *alpha, Nasty_mpi_op_signature_t *beta);
-int Nasty_mpi_op_is_divisible(Nasty_mpi_op *op);
+//int Nasty_mpi_op_is_divisible(Nasty_mpi_op *op);
 
 void Nasty_mpi_op_type_to_str(const Nasty_mpi_op * op_info, char * const buf, size_t len);
 

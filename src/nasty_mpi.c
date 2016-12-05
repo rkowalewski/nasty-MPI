@@ -28,7 +28,7 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
 
   if (result == MPI_SUCCESS)
   {
-    nasty_win_init(*win, comm);
+    nasty_win_init(*win, comm, disp_unit);
   }
 
   return result;
@@ -41,7 +41,7 @@ int MPI_Win_create(void *base, MPI_Aint size, int disp_unit,
 
   if (result == MPI_SUCCESS)
   {
-    nasty_win_init(*win, comm);
+    nasty_win_init(*win, comm, disp_unit);
   }
 
   return result;
@@ -54,7 +54,7 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
 
   if (result == MPI_SUCCESS)
   {
-    nasty_win_init(*win, comm);
+    nasty_win_init(*win, comm, sizeof(char));
   }
 
   return result;
@@ -67,7 +67,7 @@ int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Com
 
   if (result == MPI_SUCCESS)
   {
-    nasty_win_init(*win, comm);
+    nasty_win_init(*win, comm, disp_unit);
   }
 
   return result;

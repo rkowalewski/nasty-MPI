@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <macros/logging.h>
 
 static size_t hash(size_t val)
 {
@@ -56,7 +57,13 @@ void Nasty_mpi_op_signature(Nasty_mpi_op *op, Nasty_mpi_op_signature_t *call_sig
   call_signature->lookup_count = 0;
 }
 
-int Nasty_mpi_op_is_divisible(Nasty_mpi_op *op)
+
+static int nasty_mpi_op_type_extent(MPI_Datatype type, MPI_Aint *size) {
+  MPI_Aint lb;
+  return MPI_Type_get_extent(type, &lb, size);
+}
+
+static int Nasty_mpi_op_is_divisible(Nasty_mpi_op *op, int disp)
 {
   if (op == NULL) return 0;
 
@@ -91,48 +98,84 @@ void Nasty_mpi_op_type_str(Nasty_mpi_op *op, char* str)
     snprintf(str, MAX_OP_TYPE_STRLEN + 1, "%s", "undefined");
 }
 
-DArray Nasty_mpi_op_divide(Nasty_mpi_op *op_info)
+DArray Nasty_mpi_op_divide(Nasty_mpi_op *op_info, int win_disp_unit)
 {
 
-  if (!op_info || !Nasty_mpi_op_is_divisible(op_info)) return NULL;
+  if (!op_info || !Nasty_mpi_op_is_divisible(op_info, win_disp_unit)) return NULL;
 
-  MPI_Aint lb, extent, disp, base;
+  assert(win_disp_unit >= 0);
+
+  MPI_Aint extent, origin_base, target_base, target_disp_step = win_disp_unit;
   int offset;
   Nasty_mpi_op *new_op;
   DArray divided_ops = NULL;
 
   if (op_info->type == rma_put) {
     Nasty_mpi_put put = op_info->data.put;
+    nasty_mpi_op_type_extent(put.origin_datatype, &extent);
+
+    assert(extent >= (MPI_Aint) 0);
+
+    if (win_disp_unit != extent) {
+      MPI_Aint reminder = extent % win_disp_unit;
+
+      if (reminder && (reminder != extent)) {
+        debug("cannot split operations where the ratio between the window's disp_unit (%zu) and the type's extent (%zu) are odd", (size_t) win_disp_unit, (size_t) extent);
+        return NULL;
+      }
+
+      target_disp_step = extent;
+    }
+
     divided_ops = DArray_create(sizeof(Nasty_mpi_op), put.target_count);
-    MPI_Get_address(put.origin_addr, &base);
-    MPI_Type_get_extent(put.origin_datatype, &lb, &extent);
-    for (disp = put.target_disp, offset = 0; disp < put.target_disp + put.target_count; disp++, offset++) {
+    MPI_Get_address(put.origin_addr, &origin_base);
+    target_base = put.target_disp;
+
+    for (offset = 0; offset < put.target_count; ++offset) {
       new_op = DArray_new(divided_ops);
       new_op->type = rma_put;
       new_op->target_rank = op_info->target_rank;
       new_op->is_sent = 0;
       new_op->data.put = put;
       new_op->data.put.origin_count = 1;
-      new_op->data.put.origin_addr = (void*) (base + offset * extent);
-      new_op->data.put.target_disp = disp;
+      //In the new MPI Standard (>= 3.1) we should use MPI_Aint_add for safe portability
+      //see: http://www.open-mpi.de/doc/v2.0/man3/MPI_Aint_add.3.php
+      new_op->data.put.origin_addr = (void*) (origin_base + ((MPI_Aint)offset) * extent);
+      new_op->data.put.target_disp = target_base + ((MPI_Aint)offset) * target_disp_step;
       new_op->data.put.target_count = 1;
       Nasty_mpi_op_signature(new_op, &new_op->signature);
       DArray_push(divided_ops, new_op);
     }
   } else if (op_info->type == rma_get) {
     Nasty_mpi_get get = op_info->data.get;
+    nasty_mpi_op_type_extent(get.origin_datatype, &extent);
+
+    assert(extent >= (MPI_Aint) 0);
+
+    if (win_disp_unit != extent) {
+      MPI_Aint reminder = extent % win_disp_unit;
+
+      if (reminder && (reminder != extent)) {
+        debug("cannot split operations where the ratio between the window's disp_unit (%zu) and the type's extent (%zu) are odd", (size_t) win_disp_unit, (size_t) extent);
+        return NULL;
+      }
+
+      target_disp_step = extent;
+    }
+
     divided_ops = DArray_create(sizeof(Nasty_mpi_op), get.target_count);
-    MPI_Get_address(get.origin_addr, &base);
-    MPI_Type_get_extent(get.origin_datatype, &lb, &extent);
-    for (disp = get.target_disp, offset = 0; disp < get.target_disp + get.target_count; disp++, offset++) {
+    MPI_Get_address(get.origin_addr, &origin_base);
+    target_base = get.target_disp;
+
+    for (offset = 0; offset < get.target_count; ++offset) {
       new_op = DArray_new(divided_ops);
       new_op->type = rma_get;
       new_op->target_rank = op_info->target_rank;
       new_op->is_sent = 0;
       new_op->data.get = get;
       new_op->data.get.origin_count = 1;
-      new_op->data.get.origin_addr = (void*) (base + offset * extent);
-      new_op->data.get.target_disp = disp;
+      new_op->data.get.origin_addr = (void*) (origin_base + ((MPI_Aint)offset) * extent);
+      new_op->data.get.target_disp = target_base + ((MPI_Aint)offset) * target_disp_step;
       new_op->data.get.target_count = 1;
       Nasty_mpi_op_signature(new_op, &new_op->signature);
       DArray_push(divided_ops, new_op);

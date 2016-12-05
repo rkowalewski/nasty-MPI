@@ -85,14 +85,15 @@ static inline int invoke_mpi(MPI_Win win, Nasty_mpi_op *op_info, bool flush)
   return rc;
 }
 
-static inline void split_ops(DArray arr_ops)
+static inline void split_ops(DArray arr_ops, int disp_unit)
 {
   size_t num = (size_t) arr_ops->size;
+
   for (size_t i = 0; i < num; i++)
   {
     Nasty_mpi_op *op_info = DArray_get(arr_ops, i);
 
-    DArray divided_ops = Nasty_mpi_op_divide(op_info);
+    DArray divided_ops = Nasty_mpi_op_divide(op_info, disp_unit);
 
     if (divided_ops)
     {
@@ -129,9 +130,10 @@ int find_op_by_signature(const void* el, void* args)
 
 static int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
 {
-  DArray arr_ops = nasty_win_get_mpi_ops(win);
+  win_info_t info = nasty_win_get_info(win);
+  DArray arr_ops = info.pending_operations;
 
-  if (!arr_ops) return 0;
+  if (NULL == arr_ops) return 0;
 
   Nasty_mpi_op_signature_t signature;
   Nasty_mpi_op_signature(op, &signature);
@@ -309,7 +311,10 @@ static void _dumpArray(DArray arr)
 int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 {
   //int origin_rank = get_origin_rank(win);
-  DArray all_ops = nasty_win_get_mpi_ops(win);
+
+  win_info_t win_info = nasty_win_get_info(win);
+
+  DArray all_ops = win_info.pending_operations;
 
   if (DArray_is_empty(all_ops)) return MPI_SUCCESS;
 
@@ -339,7 +344,7 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
     //split MPI_Put and MPI_Get operations
     if (config.split_rma_ops)
-      split_ops(ops);
+      split_ops(ops, win_info.disp_unit);
 
     if (config.order != program_order)
       reorder_ops(ops, config.order);

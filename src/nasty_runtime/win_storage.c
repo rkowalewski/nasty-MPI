@@ -25,6 +25,13 @@ static inline int get_origin_rank(MPI_Win win)
   return rank;
 }
 
+static inline int uint_to_str(unsigned int val, char * dst, size_t len) {
+  assert(len);
+  assert(dst);
+  int n = snprintf(dst, len, "%u", val);
+  return ((size_t) n) >= len;
+}
+
 int win_storage_init(void)
 {
   win_storage = kvs_create(5, 5);
@@ -37,15 +44,16 @@ void win_storage_finalize(void)
   for (int i = 0; i < win_storage->size; i++)
   {
     if (win_storage->pairs[i]) {
-      DArray arr_ops = win_storage->pairs[i]->value;
-      DArray_clear_destroy(arr_ops);
+      win_info_t * win = win_storage->pairs[i]->value;
+      DArray_clear_destroy(win->pending_operations);
+      free(win);
     }
   }
 
   kvs_clear_destroy(win_storage);
 }
 
-static inline void get_nasty_id(MPI_Win win, char *dst)
+static inline int get_nasty_id(MPI_Win win, char *dst, size_t len)
 {
   assert(dst);
 
@@ -53,20 +61,12 @@ static inline void get_nasty_id(MPI_Win win, char *dst)
   void *attr_val;
   int flag;
   MPI_Win_get_attr(win, KEY_NASTY_ID, &attr_val, &flag);
-  if (!flag || !attr_val) return;
+  if (!flag || !attr_val) return 1;
   unsigned int nasty_id = (unsigned int) (MPI_Aint) attr_val;
-
-  //copy nasty_id to target str
-  size_t len = NASTY_ID_LEN + 1;
-#ifdef NDEBUG
-  snprintf(dst, len, "%u", nasty_id);
-#else
-  int n = snprintf(dst, len, "%u", nasty_id);
-  assert(((size_t) n) < len);
-#endif
+  return uint_to_str(nasty_id, dst, len);
 }
 
-int nasty_win_init(MPI_Win win, MPI_Comm win_comm)
+int nasty_win_init(MPI_Win win, MPI_Comm win_comm, int disp_unit)
 {
   //generate random nasty id and cache it in the window
   if (KEY_NASTY_ID == MPI_KEYVAL_INVALID) {
@@ -85,9 +85,26 @@ int nasty_win_init(MPI_Win win, MPI_Comm win_comm)
     MPI_Win_create_keyval(MPI_WIN_NULL_COPY_FN, MPI_WIN_NULL_DELETE_FN, &KEY_ORIGIN_RANK, NULL);
   }
 
-  int rank;
-  MPI_Comm_rank(win_comm, &rank);
-  MPI_Win_set_attr(win, KEY_ORIGIN_RANK, (void *) (MPI_Aint) rank);
+  char nasty_id_str[NASTY_ID_LEN + 1];
+  uint_to_str(nasty_id, nasty_id_str, NASTY_ID_LEN + 1);
+
+  win_info_t *old, *new;
+  new = malloc(sizeof(win_info_t));
+
+  if (NULL == new) {
+    return -1;
+  }
+
+  new->pending_operations = DArray_create(sizeof(Nasty_mpi_op), 10);
+  new->disp_unit = disp_unit;
+
+  old = kvs_put(win_storage, nasty_id_str, new);
+
+  if (NULL != old) {
+    if (NULL != old->pending_operations)
+      free(old->pending_operations);
+    free(old);
+  }
 
   return 0;
 }
@@ -95,17 +112,14 @@ int nasty_win_init(MPI_Win win, MPI_Comm win_comm)
 int nasty_win_lock(MPI_Win win)
 {
   char nasty_id[NASTY_ID_LEN + 1];
-  get_nasty_id(win, nasty_id);
+  int ret = get_nasty_id(win, nasty_id, NASTY_ID_LEN + 1);
 
-  if (strlen(nasty_id) == 0) {
-    //debug("window is not properly initialized (no nasty id!");
+  if (ret) {
+    log_err("window is not properly initialized (no nasty id!");
+    return 1;
   }
 
-  if (kvs_get(win_storage, nasty_id) == NULL) {
-    //store empty array for rma opeartions in key value store
-    DArray array = DArray_create(sizeof(Nasty_mpi_op), 10);
-    kvs_put(win_storage, nasty_id, array);
-  }
+  assert(kvs_get(win_storage, nasty_id));
 
   return 0;
 }
@@ -113,20 +127,38 @@ int nasty_win_lock(MPI_Win win)
 int nasty_win_unlock(MPI_Win win)
 {
   char nasty_id[NASTY_ID_LEN + 1];
-  get_nasty_id(win, nasty_id);
+  int ret = get_nasty_id(win, nasty_id, NASTY_ID_LEN + 1);
 
-  DArray array = kvs_remove(win_storage, nasty_id);
-  DArray_clear_destroy(array);
+  if (ret) {
+    log_err("window is not properly initialized (no nasty id!");
+    return 1;
+  }
+
+  win_info_t * info = kvs_remove(win_storage, nasty_id);
+
+  if (info) {
+    DArray_clear_destroy(info->pending_operations);
+    free(info);
+  }
 
   return 0;
 }
 
-DArray nasty_win_get_mpi_ops(MPI_Win win)
+win_info_t nasty_win_get_info(MPI_Win win)
 {
   char nasty_id[NASTY_ID_LEN + 1];
-  get_nasty_id(win, nasty_id);
+  int ret = get_nasty_id(win, nasty_id, NASTY_ID_LEN + 1);
 
-  return kvs_get(win_storage, nasty_id);
+  win_info_t info, *cached;
+  info.pending_operations = NULL;
+  if (ret) {
+    log_err("window is not properly initialized (no nasty id!");
+    return info;
+  }
+  cached = kvs_get(win_storage, nasty_id);
+  info = *cached;
+  assert(info.pending_operations);
+  return info;
 }
 
 int MPEi_nasty_id_free(MPI_Win win, int keyval, void *attr_val, void *extra_state)

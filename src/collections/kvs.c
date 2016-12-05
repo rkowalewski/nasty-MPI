@@ -82,7 +82,7 @@ void kvs_clear(KVstore store)
 
   if (!store) return;
   int i = 0;
-  for (i = 0; i < store->capacity; i++)
+  for (i = 0; i < store->capacity; ++i)
   {
     if (store->pairs[i])
     {

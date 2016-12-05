@@ -1,6 +1,6 @@
 include Makefile.DEF
 
-CFLAGS=-O3 -std=c11 $(OPTFLAGS) -Isrc -Wextra -Wall
+CFLAGS=-std=c11 $(OPTFLAGS) -Isrc -Wextra -Wall
 LIBS=$(OPTLIBS)
 PREFIX?=/usr/local
 
@@ -19,7 +19,7 @@ SO_TARGET=build/lib$(LIB_NAME).so.$(LIB_VERSION)
 
 # The Target Build
 
-release: CFLAGS += -DNDEBUG
+release: CFLAGS += -DNDEBUG -O3
 release: $(TARGET) $(SO_TARGET)
 	cd lib; \
 	ln -fs ../$(SO_TARGET) lib$(LIB_NAME).so.$(MAJOR); \
@@ -58,6 +58,7 @@ tests: CFLAGS += -g -Wall -Wextra -Werror
 tests: lib $(TESTS)
 	sh ./tests/basic_tests.sh
 
+samples: CFLAGS+=-ggdb
 samples: $(SAMPLES)
 
 $(SAMPLES): bin/% : samples/%.c
