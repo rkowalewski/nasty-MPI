@@ -16,6 +16,7 @@ static inline int get_origin_rank(MPI_Win win)
 {
   void *rank_attr;
   int flag, rank = -1;
+  log_info("calling win_get_attr");
   MPI_Win_get_attr(win, KEY_ORIGIN_RANK, &rank_attr, &flag);
   if (flag) rank = (int) (MPI_Aint) rank_attr;
   return rank;

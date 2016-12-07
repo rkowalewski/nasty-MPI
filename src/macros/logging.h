@@ -11,8 +11,8 @@
 #define debug(M, ...) fprintf(stderr, "[Nasty-MPI DEBUG] %s:%d: " M "\n", __FILE__, __LINE__, ##__VA_ARGS__); fflush(stderr);
 #endif
 
-#define log_info(M, ...) fprintf(stderr, "[Nasty-MPI INFO] (%s:%d) " M "\n", __FILE__, __LINE__, ##__VA_ARGS__);
-#define log_err(M, ...) fprintf(stderr, "[Nasty-MPI ERROR] (%s:%d) " M "\n", __FILE__, __LINE__, ##__VA_ARGS__);
+#define log_info(M, ...) fprintf(stderr, "[Nasty-MPI INFO] (%s:%d) " M "\n", __FILE__, __LINE__, ##__VA_ARGS__); fflush(stderr);
+#define log_err(M, ...) fprintf(stderr, "[Nasty-MPI ERROR] (%s:%d) " M "\n", __FILE__, __LINE__, ##__VA_ARGS__); fflush(stderr);
 
 /*
 #define clean_errno() (errno == 0 ? "None" : strerror(errno))
