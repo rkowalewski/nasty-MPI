@@ -20,7 +20,7 @@ static inline int get_origin_rank(MPI_Win win)
 {
   void *rank_attr;
   int flag, rank = -1;
-  log_info("get_origin_rank: calling win_get_attr");
+  //log_info("get_origin_rank: calling win_get_attr");
   MPI_Win_get_attr(win, KEY_ORIGIN_RANK, &rank_attr, &flag);
   if (flag) rank = (int) (MPI_Aint) rank_attr;
   return rank;
@@ -76,7 +76,7 @@ int nasty_win_init(MPI_Win win, MPI_Comm win_comm, int disp_unit)
   }
   void *attr_val;
   int flag;
-  log_info("nasty_win_init: calling win_get_attr");
+  //log_info("nasty_win_init: calling win_get_attr");
   MPI_Win_get_attr(win, KEY_NASTY_ID, &attr_val, &flag);
   if (flag) return -1;
 
