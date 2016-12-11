@@ -338,7 +338,7 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
     if (DArray_is_empty(ops))
     {
-      DArray_clear_estroy(ops);
+      DArray_clear_destroy(ops);
       continue;
     }
 
