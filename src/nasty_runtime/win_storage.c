@@ -105,7 +105,7 @@ int nasty_win_init(MPI_Win win, MPI_Comm win_comm, int disp_unit)
 
   if (NULL != old) {
     if (NULL != old->pending_operations)
-      free(old->pending_operations);
+      DArray_clear_destroy(old->pending_operations);
     free(old);
   }
 

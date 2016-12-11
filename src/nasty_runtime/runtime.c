@@ -338,7 +338,7 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
     if (DArray_is_empty(ops))
     {
-      DArray_destroy(ops);
+      DArray_clear_estroy(ops);
       continue;
     }
 
@@ -375,10 +375,10 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
       DArray_free(op_info);
     }
 
-    DArray_destroy(ops);
+    DArray_clear_destroy(ops);
   }
 
-  DArray_destroy(grouped_by_rank);
+  DArray_clear_destroy(grouped_by_rank);
 
   return res;
 }
