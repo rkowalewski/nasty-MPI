@@ -61,7 +61,7 @@ static inline int get_nasty_id(MPI_Win win, char *dst, size_t len)
   //fetch attribute value
   void *attr_val;
   int flag;
-  log_info("get_nasty_id: calling win_get_attr");
+  //&log_info("get_nasty_id: calling win_get_attr");
   MPI_Win_get_attr(win, KEY_NASTY_ID, &attr_val, &flag);
   if (!flag || !attr_val) return 1;
   unsigned int nasty_id = (unsigned int) (MPI_Aint) attr_val;
@@ -172,7 +172,12 @@ int MPEi_nasty_id_free(MPI_Win win, int keyval, void *attr_val, void *extra_stat
   (void) attr_val;
   (void) win;
 
-  nasty_win_unlock(win);
+  int flag;
+
+  PMPI_Initialized(&flag);
+
+  if (flag)
+    nasty_win_unlock(win);
 
   return MPI_SUCCESS;
 }
