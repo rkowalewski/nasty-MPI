@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <stdio.h>
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+
 DArray DArray_create(size_t element_size, size_t initial_capacity)
 {
   DArray array;
@@ -115,7 +117,9 @@ void *DArray_pop(DArray array)
 
 void DArray_remove_all(DArray array, DArray to_remove)
 {
-  if (!to_remove || !array || !(array->element_size == to_remove->element_size)) return;
+  if (!to_remove || !array || to_remove->size > array->size) return;
+
+  assert(to_remove->size <= array->size);
 
   for (size_t i = 0; i < (size_t) to_remove->size; i++)
   {

@@ -323,7 +323,7 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
   if (DArray_is_empty(grouped_by_rank))
   {
-    DArray_destroy(grouped_by_rank);
+    DArray_clear_destroy(grouped_by_rank);
     return MPI_SUCCESS;
   }
 

@@ -29,7 +29,6 @@ void run_rma_test(int nprocs_per_node)
 
   MPI_Win_lock_all(0, win);
 
-  //MPI_Win_allocate(local_size * sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &baseptr, &win);
 
 
   int type_size;
@@ -47,13 +46,11 @@ void run_rma_test(int nprocs_per_node)
 
   assert(MPI_Allgather(&ldisp, 1, MPI_AINT, disps, nprocs, MPI_AINT, MPI_COMM_WORLD) == MPI_SUCCESS);
 
-
   if (myrank == 0)
   {
     for (size_t idx = 0; idx < COUNT; ++idx) {
       baseptr[idx] = idx * COUNT + 1;
     }
-//    MPI_Put( values, COUNT, MPI_INT, mem_rank, 0, COUNT, MPI_INT, win);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);
@@ -74,6 +71,8 @@ void run_rma_test(int nprocs_per_node)
   MPI_Barrier(MPI_COMM_WORLD);
 
   MPI_Win_free(&win);
+
+  MPI_Free_mem(baseptr);
 
   printf("Test finished\n");
 }
