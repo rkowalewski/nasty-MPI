@@ -1,5 +1,4 @@
 #include "darray_algos.h"
-#include <stddef.h>
 #include <util/random.h>
 
 static inline void swap(void **src, void **dst, size_t i, size_t j)
@@ -55,42 +54,12 @@ DArray DArray_find(DArray array, DArray_find_fn *filter_fn, void* args)
   return filtered;
 }
 
-int DArray_natural_sort(const void *a, const void *b)
-{
-  const void *elementA = * (void **) a;
-  const void *elementB = * (void **) b;
-
-  if ( !elementA && !elementB)
-    return 0;
-  else if (!elementA)
-    return 1;
-  else if (!elementB)
-    return -1;
-
-  ptrdiff_t diff = (ptrdiff_t) elementA - (ptrdiff_t) elementB;
-
-  if (diff > 0)
-    return 1;
-  else if (diff < 0)
-    return -1;
-  else
-    return 0;
-}
-
-void DArray_sort(DArray array, DArray_sort_fn *compar)
-{
-  if (! (array && array->size)) return;
-
-  if (!compar) compar = DArray_natural_sort;
-
-  qsort(array->contents, array->capacity, sizeof(void *), compar);
-}
 
 DArray DArray_group_by(DArray array, DArray_group_by_fn *group_by_fn)
 {
   if (DArray_is_empty(array) || !group_by_fn) return NULL;
 
-  DArray groups = DArray_create(sizeof(DArray), 5);
+  DArray groups = DArray_create(sizeof(DArray), 10);
   DArray group;
   int idx;
   void *el;

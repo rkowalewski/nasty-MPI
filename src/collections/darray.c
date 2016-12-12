@@ -4,6 +4,8 @@
 #include <util/random.h>
 #include <assert.h>
 #include <stdio.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
@@ -62,11 +64,59 @@ int DArray_expand(DArray array)
   return 0;
 }
 
+int DArray_null_sort(const void *a, const void *b)
+{
+  //move only null values to the end and keep everything as it is
+  const void *elementA = * ((void **) a);
+  const void *elementB = * ((void **) b);
+
+  if ( elementA == elementB)
+    return 0;
+  else if (!elementA)
+    return 1;
+  else if (!elementB)
+    return -1;
+
+  return 0;
+}
+
+void DArray_sort(DArray array, DArray_sort_fn *compar)
+{
+  if (! (array && array->size)) return;
+
+  if (!compar) compar = DArray_null_sort;
+
+  qsort(array->contents, array->capacity, sizeof(void*), compar);
+}
+
 int DArray_contract(DArray array)
 {
-  int new_size = array->size < (int)array->expand_rate ? (int)array->expand_rate : array->size;
 
-  return DArray_resize(array, new_size + 1);
+  int last_valid_idx;
+
+  for(last_valid_idx = array->capacity - 1; last_valid_idx >= (int) array->expand_rate - 1; --last_valid_idx)
+  {
+    if (array->contents[last_valid_idx] != NULL)
+      break;
+  }
+
+  int reminder = ((size_t) last_valid_idx) % array->expand_rate;
+
+  int new_cap = last_valid_idx;
+  int res = 0;
+  if (reminder) {
+    new_cap = new_cap + array->expand_rate - reminder;
+
+    int res = 0;
+
+    if (array->capacity != new_cap) {
+      if ((res = DArray_resize(array, new_cap)) == 0) {
+        array->size = last_valid_idx + 1;
+      }
+    }
+  }
+
+  return res;
 }
 
 
@@ -109,6 +159,7 @@ void *DArray_pop(DArray array)
 
   if (DArray_end(array) > (int)array->expand_rate && DArray_end(array) % array->expand_rate)
   {
+    DArray_sort(array, DArray_null_sort);
     DArray_contract(array);
   }
 
@@ -156,6 +207,7 @@ int DArray_ensure_capacity(DArray array, int minCapacity)
 
   return 0;
 }
+
 
 /*
 void* DArray_bsearch(const void **key, DArray arr,

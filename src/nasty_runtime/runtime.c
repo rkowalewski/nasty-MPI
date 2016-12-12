@@ -14,7 +14,7 @@ extern int nanosleep(const struct timespec *req, struct timespec *rem);
 
 static inline void _sleep_milliseconds(unsigned int millis)
 {
-  //debug("sleeping for %u ms", millis);
+  debug("sleeping for %u ms", millis);
   struct timespec ts;
   ts.tv_sec = millis / 1000;
   ts.tv_nsec = (millis % 1000) * 1000000;
@@ -135,12 +135,11 @@ static int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
     int rc = 0;
     if (++cached_op->signature.lookup_count == MAX_SIGNATURE_LOOKUP_COUNT)
     {
-#ifndef NDEBUG
       char type_str[MAX_OP_TYPE_STRLEN + 1];
       Nasty_mpi_op_type_str(cached_op, type_str);
 
       debug("The same %s operation has been fired already %d times without any synchronization action!\n", type_str, cached_op->signature.lookup_count);
-#endif
+
       Nasty_mpi_config config = get_nasty_mpi_config();
 
       if (config.mpich_asynch_progress)
@@ -237,18 +236,23 @@ int find_ops_by_rank(const void* el, void* args)
 
 static DArray group_ops(DArray all_ops, int rank)
 {
+  DArray groups;
+
   if (rank != EXECUTE_OPS_OF_ANY_RANK)
   {
-    DArray groups = DArray_create(sizeof(DArray), 1);
+    DArray groups = DArray_create(sizeof(DArray), 10);
     DArray ops_of_rank = DArray_find(all_ops, find_ops_by_rank, &rank);
     DArray_set(groups, 0, ops_of_rank) ;
     DArray_remove_all(all_ops, ops_of_rank);
 
     //filter by rank
     return groups;
+  } else {
+    groups = DArray_group_by(all_ops, group_ops_by_rank);
   }
 
-  return DArray_group_by(all_ops, group_ops_by_rank);
+
+  return groups;
 }
 
 int nasty_mpi_handle_op(MPI_Win win, Nasty_mpi_op *op)
@@ -344,8 +348,8 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
     //execute all operations
     size_t count = (size_t) DArray_count(ops);
 
-    if (count > 0)
-      log_info("number of operations for rank %d: %zu", ((Nasty_mpi_op *) DArray_get(ops, 0))->target_rank, count);
+    //if (count > 0)
+      //log_info("number of operations for rank %d: %zu", ((Nasty_mpi_op *) DArray_get(ops, 0))->target_rank, count);
 
     for (size_t i = 0; i < count; i++)
     {
@@ -364,7 +368,7 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
       if (res != MPI_SUCCESS)
       {
         return res;
-        debug("rank %d could not execute all intercepted mpi rma calls", win_info.origin_rank);
+        log_err("rank %d could not execute all intercepted mpi rma calls", win_info.origin_rank);
       }
 
       DArray_free(op_info);
@@ -375,7 +379,10 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
   DArray_clear_destroy(grouped_by_rank);
 
-  //DArray_contract(all_ops);
+  //sort that all null values are in the end
+  DArray_sort(all_ops, NULL);
+  //remove null values
+  DArray_contract(all_ops);
 
   log_info("window array (%p) --> capacity: %d, size: %d", (void *) all_ops, all_ops->capacity, all_ops->size);
 

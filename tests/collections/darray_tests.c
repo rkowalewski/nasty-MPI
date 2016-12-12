@@ -80,10 +80,10 @@ char *test_expand_contract()
   mu_assert((unsigned int)array->capacity == old_capacity + array->expand_rate, "Wrong size after expand.");
 
   DArray_contract(array);
-  mu_assert((unsigned int)array->capacity == array->expand_rate + 1, "Should stay at the expand_rate at least.");
+  mu_assert((unsigned int)array->capacity >= array->expand_rate, "Should stay at the expand_rate at least.");
 
   DArray_contract(array);
-  mu_assert((unsigned int)array->capacity == array->expand_rate + 1, "Should stay at the expand_rate at least.");
+  mu_assert((unsigned int)array->capacity >= array->expand_rate, "Should stay at the expand_rate at least.");
 
   return NULL;
 }
@@ -99,6 +99,10 @@ static void print_array(DArray array)
     {
       printf("item: %d, value :%d\n", i, *val);
     }
+  ior (size_t i = 0; i < (size_t) DArray_count(arr); ++i)
+  {
+    printf("address of string: %p\n", DArray_get(arr, i));
+  }
   }
 }
 */
@@ -114,18 +118,23 @@ char *test_push_pop()
     *val = i * 333;
     DArray_push(array, val);
   }
-  mu_assert(array->size == 102, "Wrong capacity.");
+  mu_assert(array->size == 102, "Wrong size.");
   mu_assert(array->capacity == 105, "Wrong capacity.");
+
+  DArray_sort(array, NULL);
+  DArray_contract(array);
+
+  mu_assert(DArray_end(array) == 100, "Array size should be 100");
 
   for (i = 99; i >= 0; i--)
   {
     int *val = DArray_pop(array);
-    mu_assert(val != NULL, "Shouldn't get a NULL.");
+    mu_assert(val != NULL, "Must not be NULL");
     mu_assert(*val == i * 333, "Wrong value.");
     DArray_free(val);
   }
 
-  mu_assert(array->capacity == 12, "Wrong capacity.");
+  mu_assert(array->capacity == 20, "Wrong capacity.");
 
   return NULL;
 }
@@ -161,30 +170,18 @@ char *test_push_all()
 
 char * test_natural_sort(void)
 {
-  int vals[3] = {1, 2, 3};
-  DArray arr = DArray_create(sizeof(int), 10);
-  arr->size = 8;
+  char * strings[4] = {"Hello", "We", "Are", "Cool"};
+  DArray arr = DArray_create(sizeof(char *), 30);
 
-  DArray_set(arr, 1, &vals[0]);
-  DArray_set(arr, 4, &vals[1]);
-  DArray_set(arr, 7, &vals[2]);
-
-  for (size_t i = 0; i < (size_t) DArray_count(arr); i++)
-  {
-  }
+  DArray_set(arr, 1,  strings[0]);
+  DArray_set(arr, 4, strings[1]);
+  DArray_set(arr, 7,  strings[2]);
+  DArray_set(arr, 3,  strings[3]);
 
   DArray_sort(arr, NULL);
 
-  for (size_t i = 0; i < (size_t) DArray_count(arr); i++)
-  {
-    void *item = DArray_get(arr, i);
-    if (i > 2) {
-      mu_assert(!item, "must be null");
-    }
-    else {
-      mu_assert(item, "must not be null");
-    }
-  }
+  DArray_contract(arr);
+  mu_assert((size_t)array->capacity == array->expand_rate, "Wrong capacity.");
 
   DArray_destroy(arr);
 

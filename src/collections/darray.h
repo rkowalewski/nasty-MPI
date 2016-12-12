@@ -14,6 +14,8 @@ typedef struct DArray_s
 } *DArray;
 
 
+typedef int (DArray_sort_fn) (const void *a, const void *b);
+
 DArray DArray_create(size_t element_size, size_t initial_capacity);
 
 void DArray_destroy(DArray array);
@@ -36,6 +38,8 @@ void DArray_remove_all(DArray array, DArray to_remove);
 int DArray_push_all(DArray dst, DArray src);
 
 int DArray_ensure_capacity(DArray array, int minCapacity);
+
+void DArray_sort(DArray array, DArray_sort_fn *compar);
 
 #define DArray_last(A) ((A)->contents[(A)->size - 1])
 #define DArray_first(A) ((A)->contents[0])

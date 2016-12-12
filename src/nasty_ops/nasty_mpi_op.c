@@ -105,7 +105,7 @@ DArray Nasty_mpi_op_divide(Nasty_mpi_op *op_info, int win_disp_unit)
 
   assert(win_disp_unit >= 0);
 
-  MPI_Aint extent, origin_base, target_base, target_disp_step = win_disp_unit;
+  MPI_Aint extent, origin_base, target_base, target_disp_step = 1;
   int offset;
   Nasty_mpi_op *new_op;
   DArray divided_ops = NULL;
