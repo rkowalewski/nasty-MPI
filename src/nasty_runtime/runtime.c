@@ -167,6 +167,7 @@ static int cache_rma_call(MPI_Win win, Nasty_mpi_op *op)
 
   if (res)
   {
+    log_err("could not cache RMA operation");
     DArray_free(op_info);
     return res;
   }
@@ -325,7 +326,7 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
   int res = MPI_SUCCESS;
 
-  log_info("executing cached operations for %d ranks", DArray_count(grouped_by_rank));
+  //log_info("executing cached operations for %d ranks", DArray_count(grouped_by_rank));
 
   while (!DArray_is_empty(grouped_by_rank))
   {
@@ -384,7 +385,7 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
   //remove null values
   DArray_contract(all_ops);
 
-  log_info("window array (%p) --> capacity: %d, size: %d", (void *) all_ops, all_ops->capacity, all_ops->size);
+  //log_info("window array (%p) --> capacity: %d, size: %d", (void *) all_ops, all_ops->capacity, all_ops->size);
 
   return res;
 }
