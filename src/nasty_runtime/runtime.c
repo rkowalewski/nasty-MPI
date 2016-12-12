@@ -12,16 +12,6 @@ extern int nanosleep(const struct timespec *req, struct timespec *rem);
 //if the programmer fires 50 times the same mpi operation without a flush, we forward it to the mpi library...
 #define MAX_SIGNATURE_LOOKUP_COUNT 50
 
-static inline int get_origin_rank(MPI_Win win)
-{
-  void *rank_attr;
-  int flag, rank = -1;
-  log_info("calling win_get_attr");
-  MPI_Win_get_attr(win, KEY_ORIGIN_RANK, &rank_attr, &flag);
-  if (flag) rank = (int) (MPI_Aint) rank_attr;
-  return rank;
-}
-
 static inline void _sleep_milliseconds(unsigned int millis)
 {
   //debug("sleeping for %u ms", millis);
@@ -374,7 +364,7 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
       if (res != MPI_SUCCESS)
       {
         return res;
-        debug("rank %d could not execute all intercepted mpi rma calls", get_origin_rank(win));
+        debug("rank %d could not execute all intercepted mpi rma calls", win_info.origin_rank);
       }
 
       DArray_free(op_info);
@@ -385,7 +375,9 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
   DArray_clear_destroy(grouped_by_rank);
 
-  log_info("capacity of window array (%p) is: %d", (void *) all_ops, all_ops->capacity);
+  //DArray_contract(all_ops);
+
+  log_info("window array (%p) --> capacity: %d, size: %d", (void *) all_ops, all_ops->capacity, all_ops->size);
 
   return res;
 }

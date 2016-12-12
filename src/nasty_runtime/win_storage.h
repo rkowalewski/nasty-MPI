@@ -10,6 +10,7 @@
 
 typedef struct {
   int disp_unit;
+  int origin_rank;
   DArray pending_operations;
 } win_info_t;
 

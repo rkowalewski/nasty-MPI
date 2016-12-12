@@ -9,22 +9,11 @@
 
 //public
 int KEY_NASTY_ID = MPI_KEYVAL_INVALID;
-int KEY_ORIGIN_RANK = MPI_KEYVAL_INVALID;
 //private
 static KVstore win_storage = NULL;
 
 //tear down for nasty MPI attributes - execution when window gets freed
 int MPEi_nasty_id_free(MPI_Win win, int keyval, void *attr_val, void *extra_state);
-
-static inline int get_origin_rank(MPI_Win win)
-{
-  void *rank_attr;
-  int flag, rank = -1;
-  //log_info("get_origin_rank: calling win_get_attr");
-  MPI_Win_get_attr(win, KEY_ORIGIN_RANK, &rank_attr, &flag);
-  if (flag) rank = (int) (MPI_Aint) rank_attr;
-  return rank;
-}
 
 static inline int uint_to_str(unsigned int val, char * dst, size_t len) {
   assert(len);
@@ -83,11 +72,6 @@ int nasty_win_init(MPI_Win win, MPI_Comm win_comm, int disp_unit)
   unsigned int nasty_id = random_seq() % NASTY_ID_MAX_INT;
   MPI_Win_set_attr(win, KEY_NASTY_ID, (void *) (MPI_Aint) nasty_id);
 
-  //cache origin rank in window
-  if (KEY_ORIGIN_RANK == MPI_KEYVAL_INVALID) {
-    MPI_Win_create_keyval(MPI_WIN_NULL_COPY_FN, MPI_WIN_NULL_DELETE_FN, &KEY_ORIGIN_RANK, NULL);
-  }
-
   char nasty_id_str[NASTY_ID_LEN + 1];
   uint_to_str(nasty_id, nasty_id_str, NASTY_ID_LEN + 1);
 
@@ -100,6 +84,8 @@ int nasty_win_init(MPI_Win win, MPI_Comm win_comm, int disp_unit)
 
   new->pending_operations = DArray_create(sizeof(Nasty_mpi_op), 10);
   new->disp_unit = disp_unit;
+  int success = MPI_Comm_rank(win_comm, &new->origin_rank);
+  assert(success == MPI_SUCCESS);
 
   old = kvs_put(win_storage, nasty_id_str, new);
 
