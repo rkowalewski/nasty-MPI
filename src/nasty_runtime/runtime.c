@@ -331,6 +331,8 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
   int res = MPI_SUCCESS;
 
+  debug("executing cached operations for %d ranks", DArray_count(grouped_by_rank));
+
   while (!DArray_is_empty(grouped_by_rank))
   {
     DArray ops = DArray_pop(grouped_by_rank);
@@ -351,6 +353,9 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
     //execute all operations
     size_t count = (size_t) DArray_count(ops);
+
+    if (count > 0)
+      debug("number of operations for rank %d: %zu", ((Nasty_mpi_op *) DArray_get(ops, 0))->target_rank, count);
 
     for (size_t i = 0; i < count; i++)
     {
@@ -380,7 +385,7 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
   DArray_clear_destroy(grouped_by_rank);
 
-  debug("size of window array (%p) is: %d", all_ops, all_ops->capacity);
+  debug("capacity of window array (%p) is: %d", (void *) all_ops, all_ops->capacity);
 
   return res;
 }
