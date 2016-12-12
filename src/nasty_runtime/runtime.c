@@ -259,7 +259,6 @@ static DArray group_ops(DArray all_ops, int rank)
 int nasty_mpi_handle_op(MPI_Win win, Nasty_mpi_op *op)
 {
   int res = 0;
-  //int origin_rank = get_origin_rank(win);
   if (op == NULL) return res;
 
   Nasty_mpi_config config = get_nasty_mpi_config();
@@ -305,8 +304,6 @@ static void _dumpArray(DArray arr)
 
 int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 {
-  //int origin_rank = get_origin_rank(win);
-
   win_info_t win_info = nasty_win_get_info(win);
 
   DArray all_ops = win_info.pending_operations;
@@ -325,8 +322,6 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
   Nasty_mpi_config config = get_nasty_mpi_config();
 
   int res = MPI_SUCCESS;
-
-  //log_info("executing cached operations for %d ranks", DArray_count(grouped_by_rank));
 
   while (!DArray_is_empty(grouped_by_rank))
   {
@@ -348,9 +343,6 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
 
     //execute all operations
     size_t count = (size_t) DArray_count(ops);
-
-    //if (count > 0)
-      //log_info("number of operations for rank %d: %zu", ((Nasty_mpi_op *) DArray_get(ops, 0))->target_rank, count);
 
     for (size_t i = 0; i < count; i++)
     {
@@ -384,8 +376,6 @@ int nasty_mpi_execute_cached_calls(MPI_Win win, int target_rank, bool mayFlush)
   DArray_sort(all_ops, NULL);
   //remove null values
   DArray_contract(all_ops);
-
-  //log_info("window array (%p) --> capacity: %d, size: %d", (void *) all_ops, all_ops->capacity, all_ops->size);
 
   return res;
 }
