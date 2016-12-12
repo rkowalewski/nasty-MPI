@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-typedef struct DArray
+typedef struct DArray_s
 {
   int size;
   int capacity;
@@ -71,6 +71,8 @@ static inline void *DArray_get(DArray array, int i)
 
 static inline void *DArray_remove(DArray array, int i)
 {
+  if (i >= array->capacity) return NULL;
+
   void *el = array->contents[i];
 
   array->contents[i] = NULL;
