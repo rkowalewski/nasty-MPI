@@ -1,9 +1,0 @@
--Isrc
--I/opt/mpich-3.1/include
--Wall
--Wextra
--Werror
--std=gnu11
--pedantic
--Wno-variadic-macros
-

@@ -9,3 +9,4 @@ samples/*.log
 .*.swp
 tags
 *.log
+.syntastic*
