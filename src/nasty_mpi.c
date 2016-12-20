@@ -1,5 +1,6 @@
 #include <nasty_mpi.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 
 #define _map_put_get_attrs(x) \
@@ -10,12 +11,20 @@
   (x).target_count = target_count; \
   (x).target_datatype = target_datatype;
 
+static int myrank = MPI_PROC_NULL;
+static int finalized = 0;
+static int pid = 0;
+
+extern int nasty_mpi_finalized;
+
 int MPI_Init(int *argc, char ***argv)
 {
   int result = PMPI_Init(argc, argv);
 
   if (result == MPI_SUCCESS) {
+    PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     nasty_mpi_init(argc, argv);
+    pid = getpid();
   }
 
   return result;
@@ -200,8 +209,22 @@ int MPI_Win_unlock(int rank, MPI_Win win)
   return PMPI_Win_unlock(rank, win);
 }
 
+int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag) {
+  int init;
+  PMPI_Initialized(&init);
+  debug("[RANK %d, pid: %d] calling overloaded win_get_attr, is_initialized: %d, finalized: %d, nasty_mpi_finalized: %d", myrank, pid, init, finalized, nasty_mpi_finalized);
+
+  if (nasty_mpi_finalized) {
+    int wait = 1;
+    while(wait);
+  }
+  return PMPI_Win_get_attr(win, win_keyval, attribute_val, flag);
+}
+
 int MPI_Finalize(void)
 {
   nasty_mpi_finalize();
-  return PMPI_Finalize();
+  int success = PMPI_Finalize();
+  finalized = 1;
+  return success;
 }

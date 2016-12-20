@@ -42,5 +42,7 @@ int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Com
                                  void *baseptr, MPI_Win *win);
 int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win);
 
+int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag);
+
 #endif
 
