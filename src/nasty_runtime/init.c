@@ -22,9 +22,6 @@ static Nasty_mpi_config config = {
 
 static bool _isInitialized = false;
 
-
-int nasty_mpi_finalized = 0;
-
 static inline long getenv_long(const char * env) {
   if (NULL == env) return -1;
   if (strlen(env) == 0) return -1;
@@ -138,6 +135,5 @@ Nasty_mpi_config get_nasty_mpi_config(void)
 void nasty_mpi_finalize(void)
 {
   win_storage_finalize();
-  nasty_mpi_finalized = 1;
   log_info("Cleanup successful");
 }
