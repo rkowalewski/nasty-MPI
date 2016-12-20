@@ -15,6 +15,9 @@ static KVstore win_storage = NULL;
 //tear down for nasty MPI attributes - execution when window gets freed
 int MPEi_nasty_id_free(MPI_Win win, int keyval, void *attr_val, void *extra_state);
 
+
+static int is_storage_initialized = 0;
+
 static inline int uint_to_str(unsigned int val, char * dst, size_t len) {
   assert(len);
   assert(dst);
@@ -26,7 +29,9 @@ int win_storage_init(void)
 {
   win_storage = kvs_create(5, 5);
   //in the success case we should return 0, thats why we compare with NULL
-  return win_storage == NULL;
+  assert(win_storage != NULL);
+  is_storage_initialized = 1;
+  return 0;
 }
 
 void win_storage_finalize(void)
@@ -41,6 +46,7 @@ void win_storage_finalize(void)
   }
 
   kvs_clear_destroy(win_storage);
+  is_storage_initialized = 0;
 }
 
 static inline int get_nasty_id(MPI_Win win, char *dst, size_t len)
@@ -115,6 +121,8 @@ int nasty_win_lock(MPI_Win win)
 
 int nasty_win_unlock(MPI_Win win)
 {
+  if (0 == is_storage_initialized) return 0;
+
   char nasty_id[NASTY_ID_LEN + 1];
   int ret = get_nasty_id(win, nasty_id, NASTY_ID_LEN + 1);
 
@@ -158,12 +166,9 @@ int MPEi_nasty_id_free(MPI_Win win, int keyval, void *attr_val, void *extra_stat
   (void) attr_val;
   (void) win;
 
-  int flag;
-
-  PMPI_Initialized(&flag);
-
-  if (flag)
+  if (is_storage_initialized) {
     nasty_win_unlock(win);
+  }
 
   return MPI_SUCCESS;
 }
